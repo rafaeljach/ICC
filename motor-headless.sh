@@ -120,12 +120,13 @@ http.createServer((req,res) => {
   res.setHeader('Access-Control-Allow-Origin','*');
   const u = new URL(req.url,'http://x');
 
-  if (u.pathname === '/' || u.pathname === '/index.html') {
+  if (u.pathname === '/visor') {
     const v = path.join(DIR,'visor.html');
     if (fs.existsSync(v)) { res.setHeader('Content-Type','text/html; charset=utf-8');
       return res.end(fs.readFileSync(v)); }
   }
-  if (u.pathname === '/motor' || u.pathname === '/dashboard') {
+  if (u.pathname === '/' || u.pathname === '/index.html'
+      || u.pathname === '/motor' || u.pathname === '/dashboard') {
     /* dashboard TAL CUAL + bloque de sincronización añadido al final.
        El archivo en disco no se toca: solo se concatena después. */
     res.setHeader('Content-Type','text/html; charset=utf-8');
@@ -245,7 +246,16 @@ cat > sync.js <<'SYNCEOF'
         'los numeros que ves son locales', 'off');
     }
   }
-  try{ window.save = function(){}; window.stSet = async function(){}; }catch(e){}
+  /* apagar el motor LOCAL del navegador: el del droplet es el unico que
+     recoge y entrena. Sin esto habria dos motores con datos distintos y al
+     cerrar la pestana se perderia el del navegador. */
+  try{
+    window.save = function(){}; window.stSet = async function(){};
+    if (typeof S === 'object' && S.ws) { try{ S.ws.onclose=null; S.ws.close(); }catch(e){} }
+    if (typeof connect === 'function') window.connect = function(){};
+    if (typeof resolve === 'function') window.resolve = function(){};   // no entrena en local
+    if (typeof dbPut  === 'function') window.dbPut  = async function(){};
+  }catch(e){}
   sincronizar(); setInterval(sincronizar, 4000);
 })();
 SYNCEOF
@@ -504,7 +514,7 @@ tick(); setInterval(tick, 4000);
 </body>
 </html>
 VISOREOF
-echo "   $(wc -c < visor.html) bytes"
+echo "   OK"
 echo "== 4/6 · dashboard =="
 [ -f dashboard.html ] || { echo "   FALTA dashboard.html en /opt/motor"; exit 1; }
 echo "   $(wc -c < dashboard.html) bytes (sin modificar)"
@@ -536,8 +546,8 @@ IP=$(curl -s --max-time 5 ifconfig.me || echo TU-IP)
 curl -s localhost:8080/estado | head -8
 echo
 echo "  ==============================================="
-echo "   Visor rapido : http://$IP:8080/"
-echo "   DASHBOARD    : http://$IP:8080/motor"
-echo "   Estado JSON  : http://$IP:8080/estado"
-echo "   Logs         : journalctl -u icc-motor -f"
+echo "   DASHBOARD  : http://$IP:8080/     <- abre esto"
+echo "   Visor movil: http://$IP:8080/visor"
+echo "   Estado     : http://$IP:8080/estado"
+echo "   Logs       : journalctl -u icc-motor -f"
 echo "  ==============================================="
