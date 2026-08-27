@@ -1,0 +1,2487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ICC BTC 5M · Motor Logístico Direccional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070C; --surface:#0E0E16; --panel:#12121C; --raised:#171724;
+  --gold:#D4AF37; --cyan:#00D4FF; --green:#00FF88; --red:#FF4757; --amber:#FFB020;
+  --txt:#E8E8F0; --dim:#7A7A96; --faint:#4A4A62;
+  --line:rgba(212,175,55,.14); --line2:rgba(255,255,255,.05);
+  --mono:'IBM Plex Mono',monospace; --disp:'Orbitron',sans-serif; --ui:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--txt);font-family:var(--ui);overflow-x:hidden}
+body{padding-bottom:64px;background-image:radial-gradient(900px 500px at 78% -8%,rgba(0,212,255,.055),transparent 62%),radial-gradient(700px 420px at 4% 12%,rgba(212,175,55,.05),transparent 60%)}
+.lbl{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.g{color:var(--green)} .r{color:var(--red)} .c{color:var(--cyan)} .y{color:var(--gold)} .a{color:var(--amber)} .d{color:var(--dim)}
+
+/* ── TOPBAR ── */
+header{position:sticky;top:0;z-index:60;background:rgba(7,7,12,.93);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:9px;padding:10px 14px 8px}
+.mark{width:26px;height:26px;border:1px solid var(--gold);border-radius:6px;display:grid;place-items:center;font-family:var(--disp);font-weight:900;font-size:10px;color:var(--gold);background:linear-gradient(150deg,rgba(212,175,55,.18),transparent)}
+.brandtxt{font-family:var(--disp);font-weight:700;font-size:12.5px;letter-spacing:.09em}
+.brandsub{font-family:var(--mono);font-size:8.5px;color:var(--faint);letter-spacing:.13em;margin-top:1px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--faint);flex:none}
+.dot.on{background:var(--green);box-shadow:0 0 9px var(--green);animation:pulse 2s infinite}
+.dot.warn{background:var(--amber);box-shadow:0 0 9px var(--amber)}
+.dot.off{background:var(--red);box-shadow:0 0 9px var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.ticker{display:flex;gap:0;border-top:1px solid var(--line2);overflow-x:auto;scrollbar-width:none}
+.ticker::-webkit-scrollbar{display:none}
+.tk{flex:none;min-width:82px;padding:6px 12px;border-right:1px solid var(--line2)}
+.tk .v{font-family:var(--mono);font-size:13px;font-weight:600;margin-top:2px}
+
+/* ── LAYOUT ── */
+main{padding:12px 12px 0;display:flex;flex-direction:column;gap:12px;max-width:1180px;margin:0 auto}
+.card{background:linear-gradient(168deg,var(--panel),var(--surface));border:1px solid var(--line2);border-radius:13px;overflow:hidden;transition:border-color .25s cubic-bezier(.4,0,.2,1)}
+.card:hover{border-color:var(--line)}
+.ch{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 13px;border-bottom:1px solid var(--line2);background:rgba(255,255,255,.014)}
+.ct{font-family:var(--mono);font-size:9.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--dim);display:flex;align-items:center;gap:7px}
+.cb{padding:13px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(min-width:900px){.grid-lg{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;align-items:start}}
+
+/* ── VEREDICTO ── */
+#verdict{border:1px solid var(--line);position:relative}
+#verdict::before{content:'';position:absolute;inset:0;background:radial-gradient(400px 200px at 50% -20%,rgba(0,212,255,.09),transparent 70%);pointer-events:none}
+.vwrap{display:flex;align-items:flex-end;gap:16px;padding:16px 14px 12px;position:relative}
+.pmain{font-family:var(--disp);font-weight:900;font-size:clamp(46px,15vw,72px);line-height:.85;letter-spacing:-.03em;transition:color .4s}
+.pmain sub{font-size:.3em;font-weight:500;letter-spacing:.1em;vertical-align:baseline;color:var(--faint)}
+.vside{flex:1;display:flex;flex-direction:column;gap:5px;padding-bottom:5px}
+.dirbadge{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;font-family:var(--disp);font-weight:700;font-size:12px;letter-spacing:.13em;padding:5px 11px;border-radius:6px;border:1px solid;transition:all .3s}
+.gauge{height:5px;border-radius:3px;background:var(--raised);overflow:hidden;position:relative}
+.gauge i{position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--faint);z-index:2}
+.gauge b{position:absolute;top:0;bottom:0;transition:all .45s cubic-bezier(.4,0,.2,1);border-radius:3px}
+.vmeta{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line2)}
+.vm{padding:9px 6px;text-align:center;border-right:1px solid var(--line2)}
+.vm:last-child{border-right:none}
+.vm .v{font-family:var(--mono);font-size:14px;font-weight:600;margin-top:3px}
+.gatebar{padding:9px 13px;font-family:var(--mono);font-size:10px;letter-spacing:.05em;border-top:1px solid var(--line2);display:flex;align-items:center;gap:8px;line-height:1.45}
+
+/* ── LOGIT ── */
+.lg{display:grid;grid-template-columns:88px 1fr 46px;align-items:center;gap:7px;padding:3.5px 0;font-family:var(--mono);font-size:9.5px}
+.lgt{color:var(--dim);letter-spacing:.05em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lgbar{height:11px;background:var(--raised);border-radius:2px;position:relative;overflow:hidden}
+.lgbar i{position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--faint);z-index:2}
+.lgbar b{position:absolute;top:1px;bottom:1px;transition:all .35s cubic-bezier(.4,0,.2,1);border-radius:1px}
+.lgv{text-align:right;font-weight:600;font-size:10px}
+
+/* ── GRID RESOLUCIÓN ── */
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:5px}
+.rc{border-radius:5px;padding:6px 4px;text-align:center;font-family:var(--mono);border:1px solid;transition:transform .18s}
+.rc:hover{transform:translateY(-2px)}
+.rc .p{font-size:12px;font-weight:600;line-height:1.1}
+.rc .t{font-size:7.5px;letter-spacing:.05em;margin-top:2px;opacity:.62}
+.rc.w{background:rgba(0,255,136,.09);border-color:rgba(0,255,136,.32);color:var(--green)}
+.rc.l{background:rgba(255,71,87,.08);border-color:rgba(255,71,87,.28);color:var(--red)}
+.rc.n{background:rgba(122,122,150,.05);border-color:var(--line2);color:var(--dim)}
+.rc.live{background:rgba(0,212,255,.09);border-color:var(--cyan);color:var(--cyan);animation:pulse 2.4s infinite}
+
+/* ── FEATURES ── */
+.ft{display:grid;grid-template-columns:1fr 62px 44px;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line2)}
+.ft:last-child{border-bottom:none}
+.ftn{font-family:var(--mono);font-size:9.5px;color:var(--dim);letter-spacing:.04em}
+.ftn small{display:block;color:var(--faint);font-size:8px;letter-spacing:.02em;margin-top:1px}
+.spark{height:16px;width:62px}
+.ftv{font-family:var(--mono);font-size:10.5px;font-weight:600;text-align:right}
+
+/* ── MÉTRICAS ── */
+.mtx{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line2)}
+.mt{background:var(--panel);padding:10px 8px}
+.mt .v{font-family:var(--mono);font-size:15px;font-weight:600;margin-top:3px}
+.mt .s{font-family:var(--mono);font-size:8px;color:var(--faint);margin-top:2px}
+canvas{display:block;width:100%}
+
+/* ── CONFIG ── */
+.cfg{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line2)}
+.cfg:last-child{border-bottom:none}
+.cfgl{font-family:var(--mono);font-size:9.5px;color:var(--dim)}
+.cfgl small{display:block;color:var(--faint);font-size:8px;margin-top:2px;letter-spacing:0}
+input[type=number],input[type=text],select{background:var(--raised);border:1px solid var(--line2);color:var(--txt);font-family:var(--mono);font-size:11px;padding:6px 9px;border-radius:6px;width:88px;text-align:right;outline:none;transition:border-color .2s}
+select{width:112px;text-align:left}
+input:focus,select:focus{border-color:var(--cyan)}
+button{background:var(--raised);border:1px solid var(--line);color:var(--gold);font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:8px 13px;border-radius:6px;cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1)}
+button:hover{background:rgba(212,175,55,.11);transform:scale(1.02)}
+button.danger{color:var(--red);border-color:rgba(255,71,87,.3)}
+button.danger:hover{background:rgba(255,71,87,.09)}
+.tog{width:40px;height:22px;border-radius:11px;background:var(--raised);border:1px solid var(--line2);position:relative;cursor:pointer;transition:all .25s;flex:none}
+.tog::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--faint);transition:all .25s cubic-bezier(.4,0,.2,1)}
+.tog.on{background:rgba(0,255,136,.16);border-color:rgba(0,255,136,.4)}
+.tog.on::after{left:20px;background:var(--green)}
+
+/* ── AVISO ── */
+.warn{border:1px solid rgba(255,176,32,.24);background:linear-gradient(168deg,rgba(255,176,32,.05),transparent);border-radius:13px;padding:12px 13px}
+.warn h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);margin-bottom:7px}
+.warn p{font-size:11.5px;line-height:1.62;color:var(--dim);margin-bottom:6px}
+.warn p:last-child{margin-bottom:0}
+.warn b{color:var(--txt);font-weight:500}
+.warn code{font-family:var(--mono);font-size:10.5px;color:var(--cyan);background:rgba(0,212,255,.07);padding:1px 5px;border-radius:3px}
+.labbtns{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.labbtns button{flex:1;min-width:96px}
+.labh{font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin-bottom:8px}
+.labn{font-family:var(--mono);font-size:9px;color:var(--faint);line-height:1.75;margin-top:10px;padding-top:9px;border-top:1px solid var(--line2)}
+.labv{font-size:11.5px;line-height:1.65;color:var(--dim);margin-top:9px;padding:10px 11px;background:rgba(255,255,255,.02);border-radius:8px;border:1px solid var(--line2)}
+.labv b{color:var(--txt);font-weight:500}
+#brainc{border:1px solid var(--line);background:linear-gradient(168deg,#0F0F1A,#08080F)}
+#brainc canvas{touch-action:pan-y}
+#tkcard{border:1px solid var(--line)}
+.tkempty{font-family:var(--mono);font-size:10.5px;color:var(--faint);line-height:2;text-align:center;padding:14px 6px}
+.tkhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding-bottom:11px;border-bottom:1px solid var(--line2)}
+.tkdir{font-family:var(--disp);font-weight:700;font-size:13px;letter-spacing:.12em;padding:6px 12px;border-radius:6px;border:1px solid}
+.tkstat{font-family:var(--mono);font-size:10px;letter-spacing:.14em;font-weight:600}
+.tksim{font-family:var(--mono);font-size:8px;letter-spacing:.13em;color:var(--amber);border:1px solid rgba(255,176,32,.32);padding:4px 8px;border-radius:5px;margin-left:auto}
+.tkrow{display:flex;align-items:baseline;gap:8px;padding:5px 0;font-family:var(--mono);font-size:10.5px}
+.tkrow span:first-child{color:var(--dim);flex:1;letter-spacing:.02em}
+.tkrow b{font-weight:600;font-size:12px;color:var(--txt)}
+.tkd{color:var(--faint);font-size:9.5px}
+.tksep{height:1px;background:var(--line2);margin:9px 0}
+.optbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:9.5px}
+.optbl th{text-align:left;color:var(--faint);font-weight:500;font-size:8px;letter-spacing:.1em;text-transform:uppercase;padding:0 5px 7px 0;border-bottom:1px solid var(--line2)}
+.optbl td{padding:6px 5px 6px 0;border-bottom:1px solid rgba(255,255,255,.03);color:var(--dim);white-space:nowrap}
+.optbl tr.w td:first-child{border-left:2px solid var(--green);padding-left:6px}
+.optbl tr.l td:first-child{border-left:2px solid var(--red);padding-left:6px}
+#vcard{border:1px solid var(--line)}
+.vhead{display:flex;align-items:center;gap:14px;padding-bottom:13px;margin-bottom:5px;border-bottom:1px solid var(--line2)}
+.vbig{font-family:var(--disp);font-weight:900;font-size:38px;line-height:1;letter-spacing:-.03em}
+.vbig span{font-size:.42em;font-weight:500;color:var(--faint)}
+.vtxt{flex:1;font-size:11.5px;line-height:1.6;color:var(--dim)}
+.vrow{display:grid;grid-template-columns:14px 1fr auto;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.vrow:last-child{border-bottom:none}
+.vdot{width:9px;height:9px;border-radius:50%;flex:none}
+.vdot.ok{background:var(--green);box-shadow:0 0 8px rgba(0,255,136,.55)}
+.vdot.no{background:var(--faint);border:1px solid var(--line2)}
+.vlab{font-family:var(--mono);font-size:10px;color:var(--txt);letter-spacing:.02em}
+.vlab small{display:block;color:var(--faint);font-size:8.5px;margin-top:2px;line-height:1.5}
+.vval{font-family:var(--mono);font-size:11px;font-weight:600;text-align:right;white-space:nowrap}
+#shadow .mtx{grid-template-columns:repeat(3,1fr)}
+#shadow .labn{padding:11px 13px;border-top:1px solid var(--line2);margin-top:0}
+.phead,.prow{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:7px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.phead{border-bottom:1px solid var(--line2)}
+.phead .plab,.phead .pval{font-family:var(--mono);font-size:8px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint)}
+.plab{font-family:var(--mono);font-size:10px;color:var(--txt)}
+.plab small{display:block;color:var(--faint);font-size:8.5px;margin-top:2px}
+.pval{font-family:var(--mono);font-size:11.5px;font-weight:600;text-align:right;color:var(--txt)}
+#conndiag .labn{padding:11px 13px;border-top:1px solid var(--line2)}
+#acccard{border:1px solid rgba(0,212,255,.22)}
+#bnbcard{border:1px solid rgba(255,176,32,.22)}
+.accwarn{font-size:11px;line-height:1.65;color:var(--dim);background:rgba(255,176,32,.05);border:1px solid rgba(255,176,32,.2);border-radius:8px;padding:10px 11px;margin-bottom:13px}
+.accwarn b{color:var(--amber);font-weight:600}
+.accf{margin-bottom:9px}
+.accf label{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.accf input{width:100%;text-align:left;font-size:11px;padding:8px 10px}
+.accdet{margin-top:14px;border-top:1px solid var(--line2);padding-top:11px}
+.accdet summary{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);cursor:pointer}
+.accdet p{font-size:11px;line-height:1.65;color:var(--dim);margin:9px 0}
+.accdet code{font-family:var(--mono);font-size:10px;color:var(--cyan)}
+.accdet pre{background:var(--raised);border:1px solid var(--line2);border-radius:7px;padding:10px;font-family:var(--mono);font-size:9.5px;line-height:1.6;color:var(--txt);overflow-x:auto;white-space:pre;margin:9px 0}
+footer{padding:20px 14px 26px;text-align:center;font-family:var(--mono);font-size:8.5px;color:var(--faint);letter-spacing:.1em;line-height:1.9}
+.empty{padding:26px 14px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--faint);letter-spacing:.06em;line-height:1.8}
+.fade{animation:fin .42s cubic-bezier(.4,0,.2,1) both}
+@keyframes fin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="mark">ICC</div>
+    <div style="flex:1">
+      <div class="brandtxt">BTC 5M <span class="y">·</span> MOTOR LOGÍSTICO</div>
+      <div class="brandsub" id="engmode">INICIANDO · GBM + LOGIT ONLINE · NO-CUSTODIAL</div>
+    </div>
+    <div class="dot" id="feeddot"></div>
+    <div class="num" id="clock" style="font-size:11px;color:var(--dim)">--:--:--</div>
+  </div>
+  <div class="ticker">
+    <div class="tk"><div class="lbl">BTC Spot</div><div class="v c" id="tkspot">—</div></div>
+    <div class="tk"><div class="lbl">Precio a batir</div><div class="v y" id="tkopen">—</div></div>
+    <div class="tk"><div class="lbl">Δ ventana</div><div class="v" id="tkdelta">—</div></div>
+    <div class="tk"><div class="lbl">T restante</div><div class="v" id="tkleft">—</div></div>
+    <div class="tk"><div class="lbl">σ 5m</div><div class="v d" id="tksig">—</div></div>
+    <div class="tk"><div class="lbl">Muestras</div><div class="v d" id="tkn">0</div></div>
+  </div>
+  <div class="gatebar" id="runmode" style="border-top:1px solid var(--line2);border-bottom:none"><span class="dot"></span><span class="d">Detectando entorno…</span></div>
+</header>
+
+<main>
+
+  <div class="card fade" id="verdict">
+    <div class="ch"><div class="ct"><span class="dot on"></span>Veredicto de la ventana en curso</div><div class="lbl" id="wid">—</div></div>
+    <div class="vwrap">
+      <div class="pmain c" id="pbig">50.0<sub>%</sub></div>
+      <div class="vside">
+        <div class="dirbadge" id="dirb" style="border-color:var(--faint);color:var(--dim)">NEUTRAL</div>
+        <div class="lbl">Convicción direccional</div>
+        <div class="gauge"><i></i><b id="gz" style="left:50%;width:0;background:var(--cyan)"></b></div>
+      </div>
+    </div>
+    <div class="vmeta">
+      <div class="vm"><div class="lbl">Base GBM</div><div class="v d" id="mbase">—</div></div>
+      <div class="vm"><div class="lbl">Ajuste micro</div><div class="v" id="mmicro">—</div></div>
+      <div class="vm"><div class="lbl">Mercado</div><div class="v d" id="mmkt">—</div></div>
+      <div class="vm"><div class="lbl">Edge neto</div><div class="v" id="medge">—</div></div>
+    </div>
+    <div class="gatebar" id="gate"><span class="dot"></span><span class="d">Calentando motor — se requieren muestras resueltas antes de emitir señal.</span></div>
+  </div>
+
+  <div class="card fade" id="vcard">
+    <div class="ch"><div class="ct">Estado de la validación</div><div class="lbl">antes de automatizar nada</div></div>
+    <div class="cb" id="valid"></div>
+  </div>
+
+  <div class="card fade">
+    <div class="ch"><div class="ct">Sombra · 1 contrato con umbral</div><div class="lbl">sin varianza de Kelly</div></div>
+    <div class="cb" id="shadow" style="padding:0"></div>
+  </div>
+
+  <div class="card fade">
+    <div class="ch"><div class="ct">Libro de Polymarket</div><div class="lbl" id="polyslug">btc-updown-5m</div></div>
+    <div class="gatebar" id="polystat" style="border-bottom:none"><span class="dot"></span><span class="d">—</span></div>
+  </div>
+
+  <div class="card fade" id="bnbcard">
+    <div class="ch"><div class="ct">Libro de Binance · BTC Up or Down 5m</div><div class="lbl">endpoint configurable</div></div>
+    <div class="gatebar" id="bnbstat" style="border-bottom:none"><span class="dot"></span><span class="d">—</span></div>
+    <div class="cb">
+      <div class="accf"><label>marketId (ID interno de Binance)</label><input type="text" id="bnbmkt" placeholder="8859231" spellcheck="false"></div>
+      <div class="accf"><label>URL del relay</label><input type="text" id="bnbrelay" placeholder="http://192.168.1.50:8787" spellcheck="false"></div>
+      <div class="accwarn" style="background:rgba(0,212,255,.05);border-color:rgba(0,212,255,.2)">
+        El stream de Binance exige la cabecera <code>X-MBX-APIKEY</code> y el WebSocket del navegador no admite cabeceras. Por eso corre un <b>relay en Node</b> que sí puede enviarla y reexpone el libro por HTTP. Descarga <code>icc-relay.js</code>, ejecútalo con tus claves y pega aquí su URL. Abre la raíz del relay en el navegador para ver los mercados activos y sacar el <code>marketId</code> — las claves nunca entran en esta página.
+      </div>
+      <div class="cfg"><div class="cfgl">Comisión del proveedor (%)<small>1.58% en órdenes grandes, 1.8% en pequeñas</small></div><input type="number" id="cfgbnbfee" value="1.8" min="0" max="5" step="0.01"></div>
+      <div class="cfg"><div class="cfgl">Usar libro de Binance<small>tiene prioridad sobre Polymarket y el simulado</small></div><div class="tog" id="cfgbnb"></div></div>
+    </div>
+  </div>
+
+  <div class="card fade" id="acccard">
+    <div class="ch"><div class="ct">Cuenta de Polymarket</div><div class="lbl">credenciales L2</div></div>
+    <div class="gatebar" id="accstat" style="border-bottom:none"><span class="dot"></span><span class="d">—</span></div>
+    <div class="cb">
+      <div class="accwarn">Aquí <b>nunca</b> se pide tu clave privada. Con estas credenciales se puede leer tu cuenta y cancelar órdenes, pero <b>no colocar ninguna</b>: cada orden exige además una firma de la clave, que no vive en esta página. Se guardan sin cifrar en este dispositivo — no las uses en un equipo compartido.</div>
+      <div class="accf"><label>Dirección del firmante</label><input type="text" id="accaddr" placeholder="0x…" spellcheck="false"></div>
+      <div class="accf"><label>API key</label><input type="text" id="acckey" placeholder="uuid" spellcheck="false"></div>
+      <div class="accf"><label>Secret</label><input type="password" id="accsec" placeholder="base64" spellcheck="false"></div>
+      <div class="accf"><label>Passphrase</label><input type="password" id="accpass" placeholder="cadena" spellcheck="false"></div>
+      <div class="labbtns" style="margin-top:12px">
+        <button id="btnaccprobar" style="color:var(--cyan);border-color:rgba(0,212,255,.3)">Probar conexión</button>
+        <button id="btnaccwipe" class="danger">Borrar credenciales</button>
+      </div>
+      <div id="accdatos" style="margin-top:12px"></div>
+      <details class="accdet">
+        <summary>Cómo obtener estas credenciales sin exponer la clave</summary>
+        <p>Ejecuta esto <b>en tu equipo</b>, una sola vez. La clave nunca sale de ahí ni viaja a ningún sitio salvo la firma EIP-712 que Polymarket exige.</p>
+<pre>npm i @polymarket/clob-client ethers
+
+node -e "
+const {ClobClient}=require('@polymarket/clob-client');
+const {Wallet}=require('ethers');
+(async()=>{
+  const s=new Wallet(process.env.PK);
+  const c=new ClobClient('https://clob.polymarket.com',137,s);
+  console.log(await c.createOrDeriveApiKey());
+})();"</pre>
+        <p>Te devuelve <code>apiKey</code>, <code>secret</code> y <code>passphrase</code>. Esos tres van en los campos de arriba. La dirección es la del <b>firmante</b>, no la del proxy: si entras a Polymarket con email o Google, el funder aparece en polymarket.com/settings y es distinto.</p>
+        <p><b>Requiere https o localhost.</b> El navegador solo expone <code>crypto.subtle</code> —necesario para firmar HMAC— en contexto seguro. Desde <code>file://</code> el botón fallará siempre.</p>
+      </details>
+    </div>
+  </div>
+
+  <div class="card fade">
+    <div class="ch"><div class="ct">Salud de la conexión</div><div class="lbl">caídas y precio congelado</div></div>
+    <div class="cb" id="conndiag" style="padding:0"></div>
+  </div>
+
+  <div class="card fade">
+    <div class="ch"><div class="ct">Poblaciones separadas</div><div class="lbl">disparó vs no disparó</div></div>
+    <div class="cb" id="pops"></div>
+  </div>
+
+  <div class="card fade">
+    <div class="ch"><div class="ct">Por qué dispara o no</div><div class="lbl">muestra por ventana</div></div>
+    <div class="cb" id="gatediag"></div>
+  </div>
+
+  <div class="card fade" id="tkcard">
+    <div class="ch"><div class="ct">Ticket de operación</div><div class="lbl">cuánto apuesta y a qué precio</div></div>
+    <div class="cb" id="ticket"><div class="tkempty">Sin posición abierta.</div></div>
+  </div>
+
+  <div class="card fade" id="brainc">
+    <div class="ch"><div class="ct"><span class="dot on"></span>Cerebro · topología real del modelo</div><div class="lbl num" id="fps">—</div></div>
+    <canvas id="brain" style="width:100%;height:340px;display:block"></canvas>
+    <div class="cb" style="border-top:1px solid var(--line2);padding-top:11px">
+      <div class="labh">Trayectoria de los pesos · cómo aprende en el tiempo</div>
+      <canvas id="wcv" height="105"></canvas>
+    </div>
+  </div>
+
+  <div class="grid-lg">
+    <div style="display:flex;flex-direction:column;gap:12px">
+
+      <div class="card fade">
+        <div class="ch"><div class="ct">Descomposición del logit</div><div class="lbl">Aporte en σ-unidades</div></div>
+        <div class="cb" id="logits"><div class="empty">Esperando primer ciclo de features…</div></div>
+      </div>
+
+      <div class="card fade">
+        <div class="ch"><div class="ct">Rejilla de resolución</div><div class="lbl" id="rgstat">0 resueltas</div></div>
+        <div class="cb"><div class="rgrid" id="rgrid"><div class="empty" style="grid-column:1/-1">Sin ventanas resueltas todavía.</div></div></div>
+      </div>
+
+      <div class="card fade">
+        <div class="ch"><div class="ct">Curva de calibración</div><div class="lbl">Predicho vs realizado</div></div>
+        <div class="cb"><canvas id="calcv" height="150"></canvas></div>
+      </div>
+
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+
+      <div class="card fade">
+        <div class="ch"><div class="ct">Features de microestructura</div><div class="lbl">z-score normalizado</div></div>
+        <div class="cb" id="feats"><div class="empty">Conectando al feed…</div></div>
+      </div>
+
+      <div class="card fade">
+        <div class="ch"><div class="ct">Diagnóstico del modelo</div><div class="lbl" id="edgeverdict">—</div></div>
+        <div class="mtx">
+          <div class="mt"><div class="lbl">Brier modelo</div><div class="v" id="mbrier">—</div><div class="s">menor = mejor</div></div>
+          <div class="mt"><div class="lbl">Brier base</div><div class="v d" id="bbrier">—</div><div class="s">GBM recalibrado</div></div>
+          <div class="mt"><div class="lbl">Skill score</div><div class="v" id="mskill">—</div><div class="s">vs base</div></div>
+          <div class="mt"><div class="lbl">Log loss</div><div class="v" id="mll">—</div><div class="s">entropía</div></div>
+          <div class="mt"><div class="lbl">Acierto</div><div class="v" id="macc">—</div><div class="s">dirección</div></div>
+          <div class="mt"><div class="lbl">ECE</div><div class="v" id="mece">—</div><div class="s">error calibr.</div></div>
+          <div class="mt"><div class="lbl">Ganancia calib.</div><div class="v d" id="mcal">—</div><div class="s">no es alpha</div></div>
+        </div>
+      </div>
+
+      <div class="card fade">
+        <div class="ch"><div class="ct">PnL en papel</div><div class="lbl" id="pnlstat">0 operaciones</div></div>
+        <div class="cb"><canvas id="pnlcv" height="118"></canvas>
+          <div class="mtx" style="margin-top:11px">
+            <div class="mt"><div class="lbl">PnL acum.</div><div class="v" id="ppnl">$0.00</div></div>
+            <div class="mt"><div class="lbl">Win rate</div><div class="v" id="pwr">—</div></div>
+            <div class="mt"><div class="lbl">ROI / op</div><div class="v" id="proi">—</div></div>
+            <div class="mt"><div class="lbl">Banco</div><div class="v" id="pbank">$1,000.00</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card fade">
+    <div class="ch"><div class="ct">Registro de operaciones</div><button id="btnops">Exportar CSV</button></div>
+    <div class="cb" id="oplog"><div class="empty">Sin operaciones cerradas.</div></div>
+  </div>
+
+  <div class="card fade">
+    <div class="ch"><div class="ct">Laboratorio de reentrenamiento</div><div class="lbl" id="labstat">—</div></div>
+    <div class="gatebar" id="cpustat" style="border-bottom:none"><span class="d">—</span></div>
+    <div class="gatebar" id="labeng"><span class="dot"></span><span class="d">Comprobando almacenamiento…</span></div>
+    <div class="cb">
+      <div class="labbtns">
+        <button id="btnsweep">Barrido de lr</button>
+        <button id="btnci" style="color:var(--cyan);border-color:rgba(0,212,255,.3)">Bootstrap IC 95%</button>
+        <button id="btnabl">Ablación</button>
+        <button id="btnexp">Exportar JSONL</button>
+        <button id="btnwipe" class="danger">Vaciar ledger</button>
+      </div>
+      <div id="labout"><div class="empty">El motor guarda cada ventana como snapshots crudos. Con ≥400 ventanas puedes reentrenar desde cero con otros hiperparámetros y medir el skill sobre un holdout limpio — algo imposible con SGD online de una pasada.</div></div>
+    </div>
+  </div>
+
+  <div class="card fade">
+    <div class="ch"><div class="ct">Parámetros del motor</div><button id="btnreset" class="danger">Reiniciar</button></div>
+    <div class="cb">
+      <div class="cfg"><div class="cfgl">Fuente de precio<small>Feed spot que alimenta el modelo</small></div><select id="cfgsrc"><option value="binance">Binance WS</option><option value="coinbase">Coinbase WS</option><option value="kraken">Kraken WS</option></select></div>
+      <div class="cfg"><div class="cfgl">Usar libro real de Polymarket<small>sustituye el mercado simulado por el ask de verdad</small></div><div class="tog" id="cfgpoly"></div></div>
+      <div class="cfg"><div class="cfgl">Descartar ventanas con precio congelado<small>evita etiquetas UP falsas cuando el feed muere</small></div><div class="tog on" id="cfgfrozen"></div></div>
+      <div class="cfg"><div class="cfgl">No operar si Polymarket está cerrado<small>bloquea disparos durante el descanso entre mercados</small></div><div class="tog on" id="cfgpolygate"></div></div>
+      <div class="cfg"><div class="cfgl">Precio de mercado UP (¢)<small>Cópialo del libro; 0 = simular mercado eficiente</small></div><input type="number" id="cfgmkt" value="0" min="0" max="100" step="0.5"></div>
+      <div class="cfg"><div class="cfgl">Comisión por operación (%)<small>Polymarket cobra hasta 1.56% en cripto</small></div><input type="number" id="cfgfee" value="1.56" min="0" max="10" step="0.01"></div>
+      <div class="cfg"><div class="cfgl">Edge mínimo para disparar (pp)<small>Umbral neto después de comisión</small></div><input type="number" id="cfgedge" value="5" min="0" max="40" step="0.5"></div>
+      <div class="cfg"><div class="cfgl">Banco inicial (USD)<small>base sobre la que calcula el tamaño</small></div><input type="number" id="cfgbank" value="1000" min="10" step="100"></div>
+      <div class="cfg"><div class="cfgl">Precio máximo de entrada (¢)<small>por encima, la comisión supera al edge</small></div><input type="number" id="cfgmaxpx" value="90" min="50" max="99" step="1"></div>
+      <div class="cfg"><div class="cfgl">Fracción de Kelly<small>0.10 validado por simulación; 0.25 arruina</small></div><input type="number" id="cfgkelly" value="0.10" min="0.01" max="1" step="0.05"></div>
+      <div class="cfg"><div class="cfgl">Encogimiento hacia el mercado (%)<small>corrige el sobreapalancamiento de Kelly con p ruidosa</small></div><input type="number" id="cfgshrink" value="50" min="0" max="95" step="5"></div>
+      <div class="cfg"><div class="cfgl">Muestras mínimas antes de operar<small>El modelo no emite señal antes de esto</small></div><input type="number" id="cfgmin" value="300" min="0" step="50"></div>
+      <div class="cfg"><div class="cfgl">Calidad de render<small>partículas y resolución del cerebro</small></div><select id="cfgq"><option value="auto">Auto</option><option value="bajo">Bajo · ahorro</option><option value="medio">Medio</option><option value="alto">Alto</option><option value="max">Máximo</option></select></div>
+      <div class="cfg"><div class="cfgl">Usar todos los núcleos<small>apagado = mitad, deja aire al sistema</small></div><div class="tog" id="cfgmax"></div></div>
+      <div class="cfg"><div class="cfgl">Remuestreos del bootstrap<small>más = intervalo más fino, más CPU</small></div><input type="number" id="cfgboot" value="4000" min="500" max="50000" step="500"></div>
+      <div class="cfg"><div class="cfgl">Retención del ledger<small>ventanas crudas conservadas · 8000 ≈ 28 días ≈ 8 MB</small></div><input type="number" id="cfgkeep" value="8000" min="500" max="120000" step="500"></div>
+      <div class="cfg"><div class="cfgl">Tasa de aprendizaje<small>SGD Adagrad sobre el residuo</small></div><input type="number" id="cfglr" value="0.06" min="0.001" max="1" step="0.01"></div>
+      <div class="cfg"><div class="cfgl">Capa micro activa<small>Apagado = solo baseline GBM analítico</small></div><div class="tog on" id="cfgmicro"></div></div>
+      <div class="cfg"><div class="cfgl">Aprendizaje online<small>Actualiza pesos al resolver cada ventana</small></div><div class="tog on" id="cfglearn"></div></div>
+    </div>
+  </div>
+
+  <div class="warn fade">
+    <h4>Ejecución desde el celular</h4>
+    <p><b>El teléfono es un mal servidor para esto.</b> Cuando Chrome manda la pestaña a segundo plano o se apaga la pantalla, Android estrangula los timers a uno por minuto. El muestreo de volatilidad a 1 Hz se detiene y la apertura de la ventana se pierde. El motor detecta esos huecos y <b>descarta la ventana en vez de entrenar con datos corruptos</b> — verás el contador de descartes arriba.</p>
+    <p><b>Mantén la pestaña abierta y visible.</b> Toca la pantalla una vez para activar el wake lock, que evita que se apague. Solo funciona sobre https o localhost, no desde <code>file://</code>.</p>
+    <p><b>Para el ledger completo necesitas https.</b> Desde <code>file://</code> Chrome bloquea IndexedDB por origen opaco, así que el motor cae a localStorage con tope de ~600 ventanas (2 días). Suficiente para el laboratorio, no para meses de historia. Súbelo a GitHub Pages o Netlify Drop y ábrelo desde ahí: recuperas IndexedDB, wake lock y podrás añadirlo a la pantalla de inicio.</p>
+  </div>
+
+  <div class="warn fade">
+    <h4>Lo que este motor sí y no puede hacer</h4>
+    <p><b>El baseline GBM no es alpha.</b> P(UP) = Φ(ln(S/K)/σ√τ) es la fórmula que el mercado ya cotiza. Si el precio va +0.05% arriba con 60s restantes, el motor dirá ~77% y el libro también. Tu único edge posible es el <b>residuo</b>: lo que la microestructura añade por encima de esa base. Por eso el diagnóstico compara Brier modelo vs Brier base — si el skill score no es positivo y estable, la capa micro no aporta nada.</p>
+    <p><b>Riesgo de base de liquidación.</b> Polymarket liquida con el oráculo de alta frecuencia de Chainlink; Kalshi usa el índice CF Benchmarks. Este motor lee Binance/Coinbase. No son el mismo precio — puedes acertar la dirección en tu feed y perder en la liquidación.</p>
+    <p><b>La comisión te come el edge.</b> Con 1.56% por operación necesitas edge sostenido de varios puntos porcentuales solo para empatar. Las firmas de HFT llevan años explotando el gap de latencia contra Binance; desde el móvil no compites con eso.</p>
+    <p><b>Más cómputo no crea alpha.</b> Tu modelo son nueve pesos; converge en milisegundos. Los núcleos no sirven para "pensar más fuerte" — sirven para responder si tu edge es real. Por eso el bootstrap: remuestrea miles de veces el holdout y te da un intervalo de confianza. Si ese intervalo cruza cero, no tienes edge, tienes ruido con suerte.</p>
+    <p><b>El cerebro dibuja el modelo real, no un adorno.</b> Nueve aristas para nueve pesos. Grosor = |w|. Las partículas son la contribución instantánea. La arista dorada es el offset del baseline GBM, que entra directo al logit final sin pasar por la suma — igual que en la ecuación. No hay capas ocultas porque tu modelo no las tiene.</p>
+    <p><b>Con "precio de mercado UP" en 0 el contrincante es ficticio.</b> El motor simula un mercado eficiente que cotiza el baseline con ruido. Tu PnL en papel contra ese mercado no significa nada operativamente: un ROI de +88% sobre 4 operaciones es varianza, no habilidad. Para medir algo real, pega el precio del libro de Polymarket en centavos y deja que el motor compare contra la cotización de verdad.</p>
+    <p><b>Kelly con p estimada sobreapalanca.</b> Solo disparas cuando el ruido del modelo te separa del libro, que es cuando tu probabilidad está más inflada. En simulación, Kelly 1/4 con edge real de +3pp da mediana $916 y 9.4% de ruina sobre 1,000 operaciones. Por eso el motor sale en Kelly 0.10 con encogimiento del 50% hacia el precio de mercado: mediana $1,316 y cero ruina en el mismo escenario. No subas esos números sin volver a simular.</p>
+    <p><b>Esto es una herramienta de investigación.</b> Corre en papel hasta tener 1,000+ muestras resueltas con skill score positivo. No es asesoría financiera.</p>
+  </div>
+
+  <footer>ICC · INSTITUTIONAL CARIBBEAN COMPANY<br>MOTOR LOGÍSTICO BTC 5M · GBM + SGD ONLINE + PLATT<br>DATOS EN VIVO · SIN CUSTODIA · SOLO PAPEL</footer>
+
+</main>
+<script>
+'use strict';
+/* ═══ ICC BTC 5M — MOTOR LOGÍSTICO DIRECCIONAL ═══
+   Capa 1  baseline analítico GBM  P(UP)=Φ(ln(S/K)/σ√τ)
+   Capa 2  regresión logística online sobre el RESIDUO (offset = logit baseline)
+   Capa 3  calibración Platt online
+   Capa 4  gate de decisión: edge neto vs mercado, Kelly fraccionado
+   Todo el estado persiste en window.storage.                                  */
+
+const WIN_MS = 300000;                                   // ventana de 5 minutos
+const MARKS  = [240,180,120,90,60,45,30,20,10];          // τ de captura (s)
+const FEATS  = [
+  ['obi',   'Desequilibrio del libro',  'top-10 ponderado por distancia'],
+  ['micro', 'Deriva del microprecio',   'microprice vs mid / medio spread'],
+  ['tfi',   'Flujo agresor 30s',        'volumen taker comprador − vendedor'],
+  ['cvd',   'CVD de la ventana',        'delta acumulado normalizado'],
+  ['mom10', 'Momentum 10s',             'retorno / σ del horizonte'],
+  ['mom60', 'Momentum 60s',             'retorno / σ del horizonte'],
+  ['vwap',  'Desvío del VWAP',          'precio vs VWAP de la ventana'],
+  ['volr',  'Régimen de volatilidad',   'log(σ rápida / σ lenta)'],
+  ['inten', 'Intensidad de trades',     'operaciones por segundo'],
+];
+const NF = FEATS.length;
+
+/* ── utilidades numéricas ── */
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const erf=x=>{const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+.3275911*x);
+  const y=1-(((((1.061405429*t-1.453152027)*t+1.421413741)*t-.284496736)*t+.254829592)*t)*Math.exp(-x*x);
+  return s*y;};
+const Phi=z=>.5*(1+erf(clamp(z,-8,8)/Math.SQRT2));
+const sig=z=>1/(1+Math.exp(-clamp(z,-30,30)));
+const logit=p=>Math.log(clamp(p,1e-9,1-1e-9)/(1-clamp(p,1e-9,1-1e-9)));
+const fmt=(n,d=2)=>Number.isFinite(n)?n.toFixed(d):'—';
+const usd=n=>(n<0?'-$':'$')+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+/* ═══ ESTADO ═══ */
+const S = {
+  spot:0, bid:0, ask:0, bidQ:0, askQ:0, book:null, hasBook:false,
+  ticks:[], trades:[],
+  varFast:0, varSlow:0, sigSec:0, lastTick:0, lastPx:0,
+  win:null, conn:'init', lastMsg:0, ws:null, src:'binance',
+  hist:[], live:null, bank:1000, pnl:[], log:[], skipped:0,
+  sparks:{},
+};
+
+/* modelo persistente */
+const M = {
+  w:new Array(NF).fill(0), b:0, g:new Array(NF).fill(1e-4), gb:1e-4,
+  mu:new Array(NF).fill(0), s2:new Array(NF).fill(1), cnt:0,
+  n:0, a:1, c:0, a0:1, c0:0,
+  sMB:0, sBB:0, sCB:0, sLL:0, sAcc:0, sN:0,
+  bins:Array.from({length:10},()=>({n:0,p:0,y:0})),
+  trades:0, wins:0, pnlSum:0, staked:0,
+  shN:0, shWins:0, shPnl:0, sh0Pnl:0, sh0Wins:0, shEdge:0, shSeen:0, sh0N:0,
+};
+
+
+
+/* ═══ ALMACENAMIENTO EN CASCADA ═══
+   window.storage solo existe dentro del render de Claude. Fuera de ahí hay que
+   bajar por la escalera: IndexedDB (https/localhost) → localStorage (funciona
+   en file:// en Chrome) → memoria. El motor se adapta al que consiga.        */
+const ST={mode:'memory',label:'memoria volátil',mem:new Map(),cap:600};
+
+async function stInit(){
+  try{ if(typeof window.storage==='object'&&window.storage&&window.storage.get){
+    await window.storage.set('icc:probe','1');
+    ST.mode='artifact'; ST.label='window.storage (Claude)'; ST.cap=600; return; } }catch(e){}
+  try{ await dbOpen(); if(DB.ok){ST.mode='idb';ST.label='IndexedDB';ST.cap=8000;return;} }catch(e){}
+  try{ localStorage.setItem('icc:probe','1'); localStorage.removeItem('icc:probe');
+    ST.mode='local'; ST.label='localStorage'; ST.cap=600; return; }catch(e){}
+  ST.mode='memory'; ST.label='memoria volátil'; ST.cap=250;
+}
+async function stGet(k){
+  try{
+    if(ST.mode==='artifact'){const r=await window.storage.get(k);return r?r.value:null;}
+    if(ST.mode==='local')return localStorage.getItem(k);
+    if(ST.mode==='idb')return await req(tx('readonly').get('kv:'+k)).then(r=>r?r.v:null);
+    return ST.mem.get(k)||null;
+  }catch(e){return null;}
+}
+async function stSet(k,v){
+  try{
+    if(ST.mode==='artifact')return void await window.storage.set(k,v);
+    if(ST.mode==='local')return void localStorage.setItem(k,v);
+    if(ST.mode==='idb')return void await req(tx('readwrite').put({k:'kv:'+k,v}));
+    ST.mem.set(k,v);
+  }catch(e){}
+}
+async function stDel(k){
+  try{
+    if(ST.mode==='artifact')return void await window.storage.delete(k);
+    if(ST.mode==='local')return void localStorage.removeItem(k);
+    if(ST.mode==='idb')return void await req(tx('readwrite').delete('kv:'+k));
+    ST.mem.delete(k);
+  }catch(e){}
+}
+
+/* ═══ WAKE LOCK + RECUPERACIÓN TRAS SUSPENSIÓN ═══ */
+let WL=null;
+async function wake(){
+  try{ if('wakeLock' in navigator && document.visibilityState==='visible'){
+    WL=await navigator.wakeLock.request('screen');
+    WL.addEventListener('release',()=>{WL=null;updRun();}); updRun(); } }catch(e){WL=null;}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible')return;
+  wake();
+  if(!S.ws||S.ws.readyState>1)connect();
+  if(S.win)S.win.dirty='volvió de segundo plano';
+  updRun();
+});
+document.addEventListener('pointerdown',()=>{if(!WL)wake();},{once:false});
+
+function updRun(){
+  const el=document.getElementById('runmode'); if(!el)return;
+  const secure=window.isSecureContext;
+  const bits=[];
+  bits.push(ST.mode==='memory'
+    ? '<span class="r">sin persistencia</span>'
+    : '<span class="'+(ST.mode==='idb'?'g':'a')+'">'+ST.label+'</span>');
+  bits.push(WL?'<span class="g">pantalla bloqueada activa</span>'
+              :(secure?'<span class="d">wake lock inactivo — toca la pantalla</span>'
+                      :'<span class="a">wake lock no disponible sin https</span>'));
+  if(S.skipped)bits.push('<span class="a">'+S.skipped+' ventanas descartadas</span>');
+  el.innerHTML='<span class="dot '+(ST.mode==='memory'?'off':WL?'on':'warn')+'"></span><span class="d">'+
+    bits.join(' <span style="opacity:.4">·</span> ')+'</span>';
+}
+
+/* ═══ LEDGER — IndexedDB append-only para reentrenamiento offline ═══
+   window.storage guarda el estado O(1) (pesos, métricas, historial topado).
+   IndexedDB guarda el ledger crudo de snapshots, que SÍ crece sin límite y es
+   lo único que permite reentrenar con otros hiperparámetros. Si IDB no está
+   disponible (iframe sandboxed, file://, modo privado) el motor sigue igual:
+   pierde el laboratorio, no la operación.                                    */
+const DB={db:null,ok:false,n:0,bytes:0,err:null};
+
+async function dbOpen(){
+  try{
+    if(typeof indexedDB==='undefined'||!indexedDB)throw new Error('IndexedDB no expuesto');
+    DB.db=await new Promise((res,rej)=>{
+      let done=false; const to=setTimeout(()=>{if(!done){done=true;rej(new Error('timeout'));}},4500);
+      let rq; try{rq=indexedDB.open('icc_btc5m_ledger',1);}catch(e){clearTimeout(to);return rej(e);}
+      rq.onupgradeneeded=()=>{const d=rq.result;
+        if(!d.objectStoreNames.contains('w'))d.createObjectStore('w',{keyPath:'k'});};
+      rq.onsuccess=()=>{if(!done){done=true;clearTimeout(to);res(rq.result);}};
+      rq.onerror=()=>{if(!done){done=true;clearTimeout(to);rej(rq.error||new Error('open error'));}};
+      rq.onblocked=()=>{if(!done){done=true;clearTimeout(to);rej(new Error('bloqueado'));}};
+    });
+    DB.ok=true; await dbStat();
+  }catch(e){DB.ok=false; DB.err=e.message||String(e);}
+}
+
+function tx(mode){return DB.db.transaction('w',mode).objectStore('w');}
+function req(r){return new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+
+async function dbStat(){
+  if(ST.mode!=='idb'){DB.n=LG.recs.length;DB.bytes=DB.n*880;return;}
+  if(!DB.ok)return;
+  try{ DB.n=await req(tx('readonly').count());
+    if(navigator.storage&&navigator.storage.estimate){
+      const e=await navigator.storage.estimate(); DB.bytes=e.usage||0;
+    } else DB.bytes=DB.n*998;
+  }catch(e){}
+}
+
+/* un registro por ventana: 9 snapshots + etiqueta. Redondeado para reducir peso. */
+async function dbPut(w,y){
+  if(!w.snaps.length||w.dirty)return;
+  const rec={k:w.id,y,o:+w.open.toFixed(2),
+    s:w.snaps.map(s=>({t:Math.round(s.tau),l:+s.L0.toFixed(4),c:+s.scale.toFixed(4),
+                       z:s.z.map(v=>+v.toFixed(3))}))};
+  if(ST.mode==='idb'){
+    try{ await req(tx('readwrite').put(rec)); DB.n++;
+      if(DB.n>cap()&&DB.n%25===0)await dbPrune(); }catch(e){DB.err=e.message;}
+  } else {
+    LG.recs.push(rec); if(LG.recs.length>cap())LG.recs.splice(0,LG.recs.length-cap());
+    DB.n=LG.recs.length; lgSave();
+  }
+}
+
+async function dbPrune(){
+  const keep=cfg('cfgkeep')||8000;
+  try{
+    const st=tx('readwrite'); const total=await req(st.count());
+    let drop=total-keep; if(drop<=0)return;
+    await new Promise(res=>{
+      const c=tx('readwrite').openCursor();
+      c.onsuccess=e=>{const cur=e.target.result;
+        if(!cur||drop<=0)return res();
+        cur.delete(); drop--; cur.continue();};
+      c.onerror=()=>res();
+    });
+    await dbStat();
+  }catch(e){}
+}
+
+async function dbAll(limit){
+  if(ST.mode!=='idb')return LG.recs.slice(-limit);
+  if(!DB.ok)return [];
+  const out=[];
+  await new Promise(res=>{
+    const c=tx('readonly').openCursor(null,'prev');
+    c.onsuccess=e=>{const cur=e.target.result;
+      if(!cur||out.length>=limit)return res();
+      out.push(cur.value); cur.continue();};
+    c.onerror=()=>res();
+  });
+  return out.reverse();
+}
+
+async function dbWipe(){
+  LG.recs=[]; lgSave();
+  if(ST.mode==='idb'&&DB.ok){try{await req(tx('readwrite').clear());}catch(e){}}
+  DB.n=0; await dbStat();
+}
+
+/* ledger fuera de IndexedDB: un blob compacto, topado por capacidad del almacén */
+const LG={recs:[]};
+const cap=()=>Math.min(cfg('cfgkeep')||ST.cap,ST.cap);
+let lgT=null;
+function lgSave(){if(ST.mode==='idb'||ST.mode==='memory')return;
+  clearTimeout(lgT);lgT=setTimeout(()=>stSet('icc:btc5m:ledger',JSON.stringify(LG.recs)),2500);}
+async function lgLoad(){if(ST.mode==='idb')return;
+  try{const v=await stGet('icc:btc5m:ledger');if(v)LG.recs=JSON.parse(v)||[];}catch(e){}
+  DB.n=LG.recs.length;}
+
+/* ═══ REPLAY — reentrena desde cero sobre el ledger ═══
+   Los z guardados ya están estandarizados, así que el replay reproduce
+   exactamente la trayectoria online salvo por los hiperparámetros que cambies.
+   La evaluación se hace SOLO sobre la cola holdout, nunca vista en ese train.  */
+function replay(recs,{lr=.06,mask=null,holdout=.3,l2=2e-4}={}){
+  const m={w:new Array(NF).fill(0),b:0,g:new Array(NF).fill(1e-4),gb:1e-4,a:1,c:0,a0:1,c0:0};
+  const cut=Math.floor(recs.length*(1-holdout));
+  let mb=0,bb=0,cb=0,acc=0,n=0;
+  for(let ri=0;ri<recs.length;ri++){
+    const r=recs[ri], ev=ri>=cut, y=r.y;
+    for(const s of r.s){
+      let dz=m.b;
+      for(let i=0;i<NF;i++){if(mask&&!mask[i])continue;dz+=m.w[i]*s.z[i];}
+      const L=s.l+s.c*dz, pM=clamp(sig(m.a*L+m.c),.001,.999), p0=sig(s.l);
+      const pC=clamp(sig(m.a0*s.l+m.c0),.001,.999);
+      if(ev){mb+=(pM-y)**2;bb+=(p0-y)**2;cb+=(pC-y)**2;acc+=((pM>.5?1:0)===y)?1:0;n++;}
+      const g0=pC-y; m.a0=clamp(m.a0-.004*g0*s.l,.2,3); m.c0=clamp(m.c0-.004*g0,-1.5,1.5);
+      const g=(sig(L)-y)*s.c;
+      for(let i=0;i<NF;i++){if(mask&&!mask[i])continue;
+        const gi=g*s.z[i]+l2*m.w[i]; m.g[i]+=gi*gi;
+        m.w[i]=clamp(m.w[i]-lr*gi/Math.sqrt(m.g[i]+1e-8),-2.5,2.5);}
+      m.gb+=g*g; m.b=clamp(m.b-lr*g/Math.sqrt(m.gb+1e-8),-1,1);
+      const ga=pM-y; m.a=clamp(m.a-.004*ga*L,.2,3); m.c=clamp(m.c-.004*ga,-1.5,1.5);
+    }
+  }
+  return {skill:cb>0?(1-mb/cb)*100:NaN,skillRaw:bb>0?(1-mb/bb)*100:NaN,
+          calGain:bb>0?(1-cb/bb)*100:NaN,mb:n?mb/n:NaN,bb:n?bb/n:NaN,cb:n?cb/n:NaN,
+          acc:n?acc/n:NaN,n,w:m.w.slice(),lr};
+}
+
+/* ═══ PERSISTENCIA ═══ */
+async function load(){
+  /* ORDEN: config PRIMERO. Al revés, el banco leía el valor por defecto del
+     HTML en vez del guardado, y por eso nunca se aplicaba. */
+  try{const v=await stGet('icc:btc5m:cfg'); if(v){const c=JSON.parse(v);for(const k in c){const el=document.getElementById(k);
+      if(!el)continue; if(el.classList&&el.classList.contains('tog'))el.classList.toggle('on',!!c[k]); else el.value=c[k];}}}catch(e){}
+  try{const v=await stGet('icc:btc5m:model'); if(v)Object.assign(M,JSON.parse(v));}catch(e){}
+  try{const v=await stGet('icc:btc5m:hist'); if(v){const h=JSON.parse(v);S.hist=h.hist||[];S.pnl=h.pnl||[];S.bank=h.bank||1000;S.skipped=h.skipped||0;S.log=h.log||[];S.polyBlocked=h.polyBlocked||0;}}catch(e){}
+  const b0=cfg('cfgbank'); if(b0>0 && !M.trades) S.bank=b0;
+  console.log('[banco] configurado',b0,'| trades',M.trades,'| aplicado',S.bank);
+}
+let saveT=null;
+function save(){clearTimeout(saveT);saveT=setTimeout(async()=>{
+  await stSet('icc:btc5m:model',JSON.stringify(M));
+  await stSet('icc:btc5m:hist',JSON.stringify({hist:S.hist.slice(-400),pnl:S.pnl.slice(-400),bank:S.bank,skipped:S.skipped,log:S.log.slice(-200),polyBlocked:S.polyBlocked||0}));
+},1200);}
+function saveCfg(){const c={};['cfgsrc','cfgmkt','cfgfee','cfgedge','cfgkelly','cfgmin','cfglr','cfgkeep','cfgq','cfgboot','cfgmaxpx','cfgbank','cfgshrink','bnbmkt','bnbrelay','cfgbnbfee'].forEach(id=>c[id]=document.getElementById(id).value);
+  ['cfgmicro','cfglearn','cfgmax','cfgpoly','cfgpolygate','cfgfrozen','cfgbnb'].forEach(id=>c[id]=document.getElementById(id).classList.contains('on'));
+  stSet('icc:btc5m:cfg',JSON.stringify(c));}
+const cfg=id=>parseFloat(document.getElementById(id).value)||0;
+const tog=id=>document.getElementById(id).classList.contains('on');
+
+/* ═══ FEED ═══ */
+function setConn(st,msg){S.conn=st;const d=document.getElementById('feeddot');
+  d.className='dot '+(st==='live'?'on':st==='warm'?'warn':'off');
+  document.getElementById('engmode').textContent=msg;}
+
+function connect(){
+  if(S.ws){try{S.ws.onclose=null;S.ws.close();}catch(e){}S.ws=null;}
+  S.src=document.getElementById('cfgsrc').value; S.hasBook=false;
+  setConn('warm','CONECTANDO A '+S.src.toUpperCase()+'…');
+  let url,onOpen,onMsg;
+  if(S.src==='binance'){
+    url='wss://stream.binance.com:9443/stream?streams=btcusdt@aggTrade/btcusdt@bookTicker/btcusdt@depth20@100ms';
+    onOpen=()=>{};
+    onMsg=m=>{const d=m.data,s=m.stream||'';
+      if(s.includes('aggTrade')) onTrade(+d.p,+d.q,d.m?-1:1);
+      else if(s.includes('bookTicker')) onQuote(+d.b,+d.B,+d.a,+d.A);
+      else if(s.includes('depth')){S.book={bids:d.bids.map(x=>[+x[0],+x[1]]),asks:d.asks.map(x=>[+x[0],+x[1]])};S.hasBook=true;}};
+  } else if(S.src==='coinbase'){
+    url='wss://ws-feed.exchange.coinbase.com';
+    onOpen=ws=>ws.send(JSON.stringify({type:'subscribe',product_ids:['BTC-USD'],channels:['ticker']}));
+    onMsg=d=>{if(d.type!=='ticker'||!d.price)return;
+      onQuote(+d.best_bid,+(d.best_bid_size||1),+d.best_ask,+(d.best_ask_size||1));
+      if(d.last_size)onTrade(+d.price,+d.last_size,d.side==='buy'?-1:1);};
+  } else {
+    url='wss://ws.kraken.com';
+    onOpen=ws=>{ws.send(JSON.stringify({event:'subscribe',pair:['XBT/USD'],subscription:{name:'trade'}}));
+                ws.send(JSON.stringify({event:'subscribe',pair:['XBT/USD'],subscription:{name:'book',depth:10}}));};
+    onMsg=d=>{if(!Array.isArray(d))return;const ch=d[2]||'',pl=d[1];
+      if(ch==='trade'&&Array.isArray(pl))pl.forEach(t=>onTrade(+t[0],+t[1],t[3]==='b'?1:-1));
+      else if(ch.startsWith('book')&&pl){
+        S._kb=S._kb||{bids:[],asks:[]};
+        const bs=pl.bs||pl.b, as=pl.as||pl.a;
+        if(bs&&bs.length)S._kb.bids=bs.map(x=>[+x[0],+x[1]]).filter(x=>x[1]>0).sort((a,b)=>b[0]-a[0]);
+        if(as&&as.length)S._kb.asks=as.map(x=>[+x[0],+x[1]]).filter(x=>x[1]>0).sort((a,b)=>a[0]-b[0]);
+        if(S._kb.bids.length&&S._kb.asks.length){S.book=S._kb;S.hasBook=true;
+          onQuote(S._kb.bids[0][0],S._kb.bids[0][1],S._kb.asks[0][0],S._kb.asks[0][1]);}}};
+  }
+  let ws; try{ws=new WebSocket(url);}catch(e){setConn('down','FALLO AL ABRIR SOCKET');return;}
+  S.ws=ws;
+  ws.onopen=()=>{try{onOpen(ws);}catch(e){}
+    S.conStat=S.conStat||{up:0,down:0,drops:0,t:Date.now(),live:false};
+    if(!S.conStat.live){S.conStat.down+=Date.now()-S.conStat.t;S.conStat.t=Date.now();S.conStat.live=true;}
+    setConn('live','MOTOR EN LÍNEA · '+S.src.toUpperCase()+' · GBM + LOGIT ONLINE');};
+  ws.onmessage=e=>{
+    /* BUG CORREGIDO: setConn('live') solo vivía en ws.onopen. Un hueco de 12 s
+       —normal con VPN o conmutación 4G/5G— ponía conn='warm' y NADA lo devolvía
+       nunca a 'live', aunque los datos volvieran al instante. El socket seguía
+       entregando pero el flag quedaba atascado, y como ready exige conn==='live'
+       el gate se bloqueaba de forma permanente. Se restaura al llegar datos. */
+    S.lastMsg=Date.now();
+    if(ws===S.ws&&ws.readyState===1&&S.conn!=='live'){
+      S.conStat=S.conStat||{up:0,down:0,drops:0,t:Date.now(),live:false};
+      if(!S.conStat.live){S.conStat.down+=Date.now()-S.conStat.t;S.conStat.t=Date.now();S.conStat.live=true;}
+      S.recov=(S.recov||0)+1;
+      setConn('live','MOTOR EN LÍNEA · '+S.src.toUpperCase()+' · GBM + LOGIT ONLINE');
+    }
+    try{onMsg(JSON.parse(e.data));}catch(err){}};
+  ws.onerror=()=>setConn('down','ERROR DE FEED · REINTENTANDO');
+  ws.onclose=()=>{
+    S.conStat=S.conStat||{up:0,down:0,drops:0,t:Date.now(),live:false};
+    if(S.conStat.live){S.conStat.up+=Date.now()-S.conStat.t;S.conStat.t=Date.now();S.conStat.live=false;}
+    S.conStat.drops++;
+    setConn('down','DESCONECTADO · REINTENTANDO EN 3s');setTimeout(connect,3000);};
+}
+
+function onQuote(b,bq,a,aq){if(!(b>0&&a>0))return;S.bid=b;S.ask=a;S.bidQ=bq||1;S.askQ=aq||1;
+  const nv=(b+a)/2;
+  if(S.win&&S.win.open&&nv!==S.win.open)S.win.moved=1;   // el precio SÍ llegó y cambió
+  S.spot=nv;}
+function onTrade(p,q,side){
+  if(!(p>0))return; if(!S.spot)S.spot=p;
+  S.trades.push({t:Date.now(),p,q,s:side});
+  if(S.trades.length>4000)S.trades.splice(0,1500);
+  const w=S.win; if(w){w.vn+=p*q;w.vd+=q;w.cvd+=side*q;w.vol+=q;}
+}
+
+/* muestreo de precio a 1 Hz para la volatilidad */
+setInterval(()=>{
+  if(!S.spot)return; const now=Date.now();
+  if(S.lastPx>0){
+    const r=Math.log(S.spot/S.lastPx);
+    S.varFast=.88*S.varFast+.12*r*r;
+    S.varSlow=.985*S.varSlow+.015*r*r;
+    S.sigSec=Math.sqrt(Math.max(S.varSlow,1e-12));
+  }
+  S.lastPx=S.spot;
+  S.ticks.push({t:now,p:S.spot});
+  if(S.ticks.length>400)S.ticks.splice(0,150);
+},1000);
+
+/* semilla de volatilidad desde velas de 1m */
+async function seedVol(){
+  const tries=[
+    ['https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1m&limit=120',
+      j=>j.map(k=>+k[4])],
+    ['https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=60',
+      j=>j.slice(0,120).reverse().map(k=>+k[4])],
+  ];
+  for(const [u,ex] of tries){
+    try{const r=await fetch(u);if(!r.ok)continue;const cl=ex(await r.json());
+      if(cl.length<20)continue;
+      let s=0,n=0;for(let i=1;i<cl.length;i++){const x=Math.log(cl[i]/cl[i-1]);s+=x*x;n++;}
+      const v1m=s/n, vsec=v1m/60;
+      S.varFast=S.varSlow=vsec; S.sigSec=Math.sqrt(vsec);
+      if(!S.spot)S.spot=cl[cl.length-1];
+      return true;}catch(e){}
+  }
+  S.varFast=S.varSlow=Math.pow(1.6e-5,2); S.sigSec=1.6e-5; return false;
+}
+
+/* ═══ VENTANAS ═══ */
+function windowId(t){return Math.floor(t/WIN_MS)*WIN_MS;}
+function newWindow(id){
+  const late=Date.now()-id;
+  return {id,start:id,end:id+WIN_MS,open:S.spot||0,vn:0,vd:0,cvd:0,vol:0,
+          marks:new Set(MARKS),snaps:[],fired:null,ref:null,
+          dirty:late>3000?'apertura perdida (+'+Math.round(late/1000)+'s)':null};
+}
+function tickWindow(){
+  const now=Date.now(), id=windowId(now);
+  if(S.lastLoop&&now-S.lastLoop>4000&&S.win)
+    S.win.dirty='pestaña suspendida '+Math.round((now-S.lastLoop)/1000)+'s';
+  S.lastLoop=now;
+  if(!S.win){ if(!S.spot)return; S.win=newWindow(id); return; }
+  if(S.win.id!==id){
+    if(id>S.win.id+WIN_MS)S.win.dirty='ventanas saltadas';
+    resolve(S.win, S.spot); S.win=newWindow(id); return; }
+  if(!S.win.open&&S.spot){ S.win.open=S.spot; S.win.dirty='apertura tardía'; }
+}
+
+/* ═══ FEATURES ═══ */
+function rawFeatures(){
+  const now=Date.now(), w=S.win; if(!w||!w.open||!S.spot)return null;
+  const tau=Math.max((w.end-now)/1000,.5), el=Math.max((now-w.start)/1000,1);
+  const sg=Math.max(S.sigSec,1e-7);
+  const x=new Array(NF).fill(0);
+
+  if(S.hasBook&&S.book){
+    let bs=0,as=0;const mid=S.spot;
+    for(const [p,q] of S.book.bids.slice(0,10)) bs+=q*Math.exp(-Math.abs(mid-p)/(mid*4e-4));
+    for(const [p,q] of S.book.asks.slice(0,10)) as+=q*Math.exp(-Math.abs(p-mid)/(mid*4e-4));
+    x[0]=(bs-as)/(bs+as+1e-9);
+  }
+  if(S.bid>0&&S.ask>S.bid){
+    const mp=(S.bid*S.askQ+S.ask*S.bidQ)/(S.bidQ+S.askQ+1e-9), mid=(S.bid+S.ask)/2;
+    x[1]=clamp((mp-mid)/((S.ask-S.bid)/2+1e-9),-1,1);
+  }
+  let bq=0,sq=0,n10=0;
+  for(let i=S.trades.length-1;i>=0;i--){const t=S.trades[i];
+    if(now-t.t>30000)break;
+    if(t.s>0)bq+=t.q;else sq+=t.q;
+    if(now-t.t<=10000)n10++;}
+  x[2]=(bq-sq)/(bq+sq+1e-9);
+  x[3]=clamp(w.cvd/(w.vol+1e-9),-1,1);
+
+  const at=sec=>{const tgt=now-sec*1000;for(let i=S.ticks.length-1;i>=0;i--)if(S.ticks[i].t<=tgt)return S.ticks[i].p;
+    return S.ticks.length?S.ticks[0].p:S.spot;};
+  x[4]=clamp(Math.log(S.spot/at(10))/(sg*Math.sqrt(10)),-6,6);
+  x[5]=clamp(Math.log(S.spot/at(60))/(sg*Math.sqrt(60)),-6,6);
+  const vwap=w.vd>0?w.vn/w.vd:S.spot;
+  x[6]=clamp(Math.log(S.spot/vwap)/(sg*Math.sqrt(el)),-6,6);
+  x[7]=clamp(.5*Math.log(Math.max(S.varFast,1e-14)/Math.max(S.varSlow,1e-14)),-3,3);
+  x[8]=clamp(Math.log1p(n10/10)-.6,-3,3);
+
+  return {x,tau,el,vwap};
+}
+
+function standardize(x,learn){
+  const z=new Array(NF);
+  for(let i=0;i<NF;i++){
+    const sd=Math.sqrt(Math.max(M.s2[i],1e-9));
+    z[i]=clamp((x[i]-M.mu[i])/sd,-5,5);
+    if(learn){const a=1/Math.min(M.cnt+1,4000),d=x[i]-M.mu[i];
+      M.mu[i]+=a*d; M.s2[i]+=a*(d*d-M.s2[i]);}
+  }
+  if(learn)M.cnt++;
+  return z;
+}
+
+/* ═══ PREDICCIÓN ═══ */
+function predict(learnStats){
+  const f=rawFeatures(); if(!f)return null;
+  const w=S.win, sg=Math.max(S.sigSec,1e-7);
+  const sigTau=sg*Math.sqrt(f.tau);
+  const z0=clamp(Math.log(S.spot/w.open)/sigTau,-6,6);
+  const p0=clamp(Phi(z0),1e-6,1-1e-6);
+  const L0=logit(p0);
+
+  const z=standardize(f.x,learnStats);
+  const scale=Math.sqrt(f.tau/WIN_MS*1000);
+  let dz=M.b; const contrib=new Array(NF);
+  for(let i=0;i<NF;i++){const c=M.w[i]*z[i];contrib[i]=c*scale;dz+=c;}
+  const micro=tog('cfgmicro')?scale*dz:0;
+
+  const L=L0+micro, pRaw=sig(L);
+  const pCal=clamp(sig(M.a*L+M.c),.001,.999);
+
+  return {p:pCal,pRaw,p0,L,L0,micro,contrib,z,x:f.x,tau:f.tau,z0,sigTau,vwap:f.vwap,scale};
+}
+
+/* ═══ MERCADO SIMULADO ═══ */
+let noiseState=0;
+function marketPrice(pr){
+  const bl=bnbPrice();
+  if(bl)return clamp(bl.up,.005,.995);         // ask real de Binance
+  const live=polyPrice();
+  if(live)return clamp(live.up,.005,.995);      // ask real: lo que pagas de verdad
+  const manual=cfg('cfgmkt');
+  if(manual>0)return clamp(manual/100,.01,.99);
+  noiseState=.85*noiseState+.15*(Math.random()*2-1);
+  // clamp simétrico y más ancho que el del modelo: si no, cuando p0→1 el techo
+  // de 0.98 fabrica edge falso justo en las ventanas que el modelo acierta.
+  return clamp(pr.p0+noiseState*.012,.004,.996);
+}
+
+
+/* ═══ FEED REAL DE POLYMARKET ═══
+   Los mercados de 5m usan slug btc-updown-5m-{unix del inicio}, sin zona
+   horaria — coincide exactamente con la alineación de ventanas del motor.
+   Gamma devuelve outcomePrices como STRING JSON, no como array: hay que
+   parsearlo antes de indexar o lees el carácter "[".                        */
+const POLY = {on:false, slug:null, tokUp:null, tokDn:null, bid:0, ask:0, mid:0,
+              ts:0, ms:0, err:null, tries:0, wid:null, vol:0};
+
+const polySlug = winStart => 'btc-updown-5m-' + Math.floor(winStart/1000);
+
+async function polyResolve(winStart){
+  const slug = polySlug(winStart);
+  if(POLY.wid === winStart && POLY.tokUp) return true;
+  POLY.slug = slug; POLY.tokUp = POLY.tokDn = null; POLY.err = null;
+  const t0 = performance.now();
+  try{
+    const r = await fetch('https://gamma-api.polymarket.com/markets?slug=' + slug,
+      {headers:{'User-Agent':'icc-btc5m/1.0'}});
+    if(!r.ok){ POLY.err = 'gamma HTTP ' + r.status + (r.status===404?' — mercado aún no listado':''); return false; }
+    const arr = await r.json();
+    const m = Array.isArray(arr) ? arr[0] : arr;
+    if(!m){ POLY.err = 'slug sin resultados'; return false; }
+    /* estos tres campos llegan como string JSON */
+    const par = v => { try{ return typeof v === 'string' ? JSON.parse(v) : v; }catch(e){ return null; } };
+    const outs = par(m.outcomes) || [], toks = par(m.clobTokenIds) || [], px = par(m.outcomePrices) || [];
+    let iUp = outs.findIndex(o => /up|sub|arriba/i.test(String(o)));
+    if(iUp < 0) iUp = 0;
+    POLY.tokUp = toks[iUp]; POLY.tokDn = toks[1-iUp];
+    POLY.vol = +m.volumeNum || 0;
+    if(px[iUp] != null){ POLY.mid = +px[iUp]; POLY.ts = Date.now(); }
+    POLY.wid = winStart; POLY.ms = Math.round(performance.now()-t0);
+    if(!POLY.tokUp){ POLY.err = 'sin clobTokenIds'; return false; }
+    return true;
+  }catch(e){
+    POLY.err = (String(e).includes('Failed to fetch') || String(e).includes('NetworkError'))
+      ? 'bloqueado por CORS o filtro de IP — requiere ejecución en servidor'
+      : String(e).slice(0,90);
+    return false;
+  }
+}
+
+async function polyBook(){
+  if(!POLY.tokUp) return false;
+  const t0 = performance.now();
+  try{
+    const r = await fetch('https://clob.polymarket.com/book?token_id=' + POLY.tokUp);
+    if(!r.ok){ POLY.err = 'clob HTTP ' + r.status; return false; }
+    const b = await r.json();
+    const bids = (b.bids||[]).map(x=>+x.price).filter(Number.isFinite);
+    const asks = (b.asks||[]).map(x=>+x.price).filter(Number.isFinite);
+    if(!bids.length || !asks.length){ POLY.err = 'libro vacío'; return false; }
+    POLY.bid = Math.max(...bids); POLY.ask = Math.min(...asks);
+    POLY.mid = (POLY.bid + POLY.ask) / 2;
+    POLY.ts = Date.now(); POLY.ms = Math.round(performance.now()-t0); POLY.err = null;
+    return true;
+  }catch(e){
+    POLY.err = String(e).includes('Failed to fetch')
+      ? 'CORS o filtro de IP en CLOB — requiere servidor' : String(e).slice(0,90);
+    return false;
+  }
+}
+
+let polyBusy = false;
+async function polyTick(){
+  if(!tog('cfgpoly') || !S.win || polyBusy) return;
+  polyBusy = true;
+  try{
+    POLY.on = true; POLY.tries++;
+    /* Los mercados de 5m no son consecutivos: hay descanso entre uno y el
+       siguiente. Sondeando solo la ventana en curso el panel se queda en
+       "libro vacío" durante toda la pausa. Se prueban la actual, la siguiente
+       y la +2, y se anota cuál trajo órdenes.                              */
+    for(const [off,et] of [[0,'actual'],[300000,'siguiente'],[600000,'+2']]){
+      if(await polyResolve(S.win.start+off)){
+        if(await polyBook()){ POLY.etq=et; POLY.off=off; POLY.okAt=Date.now(); return; }
+      }
+      POLY.wid=null;
+    }
+    POLY.okAt=0;
+  } finally { polyBusy = false; renderPoly(); }
+}
+
+/* ═══ FILTRO DE DISPONIBILIDAD DE MERCADO ═══
+   Si Polymarket está en descanso no hay libro donde ejecutar: abrir posición
+   ahí produce operaciones que en real no existirían. Solo actúa con el toggle
+   encendido; apagado, el comportamiento es idéntico al original.          */
+function polyMercadoAbierto(){
+  return !!(POLY.ask && POLY.okAt && Date.now()-POLY.okAt < 30000);
+}
+function polyGateOK(){
+  if(!tog('cfgpolygate')) return true;      // filtro desactivado
+  if(!tog('cfgpoly'))     return true;       // sin feed no se puede filtrar
+  return polyMercadoAbierto();
+}
+
+function polyPrice(){
+  if(!tog('cfgpoly') || !POLY.ask || Date.now()-POLY.ts > 25000) return null;
+  /* pagas el ask al comprar UP; el bid es lo que te dan al vender */
+  return {up: POLY.ask, dn: 1-POLY.bid, mid: POLY.mid, fresh: Date.now()-POLY.ts};
+}
+
+function renderPoly(){
+  const el = document.getElementById('polystat'); if(!el) return;
+  if(!tog('cfgpoly')){
+    el.innerHTML = '<span class="dot"></span><span class="d">Feed apagado — el motor usa mercado simulado. '+
+      'Enciéndelo para medir tu edge contra el libro real.</span>'; return; }
+  if(POLY.err){
+    el.innerHTML = '<span class="dot off"></span><span class="d"><b class="r">'+POLY.err+'</b>'+
+      (POLY.slug ? ' <span style="opacity:.5">· '+POLY.slug+'</span>' : '')+'</span>'; return; }
+  if(!POLY.ask){
+    el.innerHTML = '<span class="dot warn"></span><span class="d">Sin libro en la ventana actual, la siguiente ni la +2 — '+
+      (tog('cfgpolygate')?'<b class="a">mercado en descanso: el filtro está bloqueando disparos.</b>':'el filtro está desactivado.')+
+      '</span>'; return; }
+  const age = Math.round((Date.now()-POLY.ts)/1000);
+  el.innerHTML = '<span class="dot on"></span><span class="d">Libro real ('+(POLY.etq||'actual')+') · UP compra a <b class="c">'+
+    (POLY.ask*100).toFixed(1)+'¢</b> vende a <b class="c">'+(POLY.bid*100).toFixed(1)+
+    '¢</b> · spread '+((POLY.ask-POLY.bid)*100).toFixed(1)+'¢ · '+age+'s · '+POLY.ms+'ms'+
+    (POLY.vol?' · vol $'+Math.round(POLY.vol).toLocaleString():'')+'</span>';
+}
+
+/* ═══ DECISIÓN ═══ */
+function decide(pr){
+  const c=marketPrice(pr), fee=cfg('cfgfee')/100, thr=cfg('cfgedge')/100;
+  const eUp=pr.p-c-fee, eDn=(1-pr.p)-(1-c)-fee;
+  const up=eUp>=eDn;
+  const edge=up?eUp:eDn, px=up?c:1-c, p=up?pr.p:1-pr.p;
+  // Encoger p hacia el precio de mercado antes de dimensionar. Sin esto, Kelly
+  // sobreapalanca: solo disparas cuando el ruido del modelo te aleja del libro,
+  // que es exactamente cuando tu p está más inflada. Validado por simulación.
+  const sh=clamp(cfg('cfgshrink')/100,0,.95);
+  const pK=px+(p-px)*(1-sh);
+  const kelly=px<.999?clamp((pK-px)/(1-px),0,1)*cfg('cfgkelly'):0;
+  const ready=M.n>=cfg('cfgmin')&&S.conn==='live';
+  const maxpx=cfg('cfgmaxpx')/100||.90;
+  const tooRich=px>maxpx;
+  const fire=ready&&edge>=thr&&kelly>0&&pr.tau>15&&!tooRich;
+  return {c,edge,up,px,kelly,fire,ready,eUp,eDn,tooRich,maxpx,pK,p};
+}
+
+/* ═══ RESOLUCIÓN Y APRENDIZAJE ═══ */
+function resolve(w,close){
+  if(!w.open||!close||!w.snaps.length)return;
+  if(w.snaps.length<5&&!w.dirty)w.dirty='snapshots insuficientes ('+w.snaps.length+'/9)';
+  /* PROTECCIÓN DE ETIQUETA. Si el precio nunca cambió durante toda la ventana,
+     el feed estaba muerto: open y close son el mismo valor congelado y
+     y = (close >= open) da SIEMPRE 1. Eso mete etiquetas UP falsas en el
+     entrenamiento. Que BTC no mueva ni un céntimo en 5 minutos con feed vivo
+     tiene probabilidad esencialmente cero, así que no hay falsos positivos.
+     Desactivable con el toggle "Descartar ventanas con precio congelado".  */
+  if(tog('cfgfrozen')&&!w.moved&&close===w.open&&!w.dirty){
+    w.dirty='precio congelado — feed muerto'; S.frozenWin=(S.frozenWin||0)+1;
+  }
+  if(w.dirty){ S.skipped=(S.skipped||0)+1; updRun(); save(); return; }
+  const y=close>=w.open?1:0;
+  const lr=cfg('cfglr'), learn=tog('cfglearn');
+
+  for(const s of w.snaps){
+    const pM=clamp(sig(M.a*s.L+M.c),.001,.999);
+    const L0=s.L0!==undefined?s.L0:logit(s.p0);
+    const pC=clamp(sig(M.a0*L0+M.c0),.001,.999);
+    M.sMB+=(pM-y)**2; M.sBB+=(s.p0-y)**2; M.sCB+=(pC-y)**2;
+    if(learn){const g0=pC-y; M.a0=clamp(M.a0-.004*g0*L0,.2,3); M.c0=clamp(M.c0-.004*g0,-1.5,1.5);}
+    M.sLL+=-(y*Math.log(pM)+(1-y)*Math.log(1-pM));
+    M.sAcc+=((pM>.5?1:0)===y)?1:0; M.sN++;
+    const bi=clamp(Math.floor(pM*10),0,9);
+    M.bins[bi].n++; M.bins[bi].p+=pM; M.bins[bi].y+=y;
+
+    if(learn){
+      const g=(sig(s.L)-y)*s.scale;
+      for(let i=0;i<NF;i++){
+        const gi=g*s.z[i]+2e-4*M.w[i];
+        M.g[i]+=gi*gi; M.w[i]-=lr*gi/Math.sqrt(M.g[i]+1e-8);
+        M.w[i]=clamp(M.w[i],-2.5,2.5);
+      }
+      M.gb+=g*g; M.b=clamp(M.b-lr*g/Math.sqrt(M.gb+1e-8),-1,1);
+      const ga=(pM-y);
+      M.a=clamp(M.a-.004*ga*s.L,.2,3); M.c=clamp(M.c-.004*ga,-1.5,1.5);
+      M.n++;
+    }
+  }
+
+  /* SOMBRA: 1 contrato fijo, mismo umbral que el motor real. El stake fijo en
+     dólares era un error — $10 a 5¢ paga $190 y a 95¢ paga $0.53, pura varianza
+     del precio. Con 1 contrato el resultado es (acierto − precio), acotado.
+     El umbral es lo que aporta potencia estadística: apostar en toda ventana
+     diluye la señal con ruido. El baseline corre en paralelo como control.   */
+  if(w.ref&&w.refC>0&&w.refC<1){
+    const fee=cfg('cfgfee')/100, thr=cfg('cfgedge')/100, maxpx=cfg('cfgmaxpx')/100||.9;
+    const c=w.refC;
+    const bet=p=>{
+      const eU=p-c-fee, eD=(1-p)-(1-c)-fee, up=eU>=eD, px=up?c:1-c, edge=up?eU:eD;
+      if(edge<thr||px>maxpx||px<=0||px>=1)return null;
+      const won=(up?1:0)===y;
+      return {won,pnl:(won?1:0)-px-fee*px,edge};
+    };
+    const bm=bet(w.ref.p), bb=bet(w.ref.p0);
+    M.shSeen=(M.shSeen||0)+1;
+    if(bm){M.shN++; M.shPnl+=bm.pnl; M.shEdge+=bm.edge; if(bm.won)M.shWins++;}
+    if(bb){M.sh0N=(M.sh0N||0)+1; M.sh0Pnl+=bb.pnl; if(bb.won)M.sh0Wins++;}
+  }
+
+  /* MEDICIÓN — poblaciones separadas. El modelo entrena con todas las ventanas,
+     pero el edge del SISTEMA solo existe donde el gate decidió operar. Si la
+     calibración es peor donde disparó, eso es sesgo de selección. No altera
+     ninguna decisión: solo acumula contadores.                              */
+  if(w.ref){
+    const L0r=logit(w.ref.p0), pC=clamp(sig((M.a0||1)*L0r+(M.c0||0)),.001,.999);
+    const b=w.fired?'g':'u';
+    M[b+'N']=(M[b+'N']||0)+1;
+    M[b+'MB']=(M[b+'MB']||0)+(w.ref.p-y)**2;
+    M[b+'CB']=(M[b+'CB']||0)+(pC-y)**2;
+    M[b+'Acc']=(M[b+'Acc']||0)+(((w.ref.p>.5?1:0)===y)?1:0);
+    if(w.refC>0&&w.refC<1){
+      const up=w.ref.p>=w.refC;
+      M[b+'Real']=(M[b+'Real']||0)+(((up?1:0)===y?1:0)-(up?w.refC:1-w.refC));
+    }
+  }
+  if(w.polyBlock) M.polyBlockWin=(M.polyBlockWin||0)+1;
+
+  if(w.fired){
+    const f=w.fired, won=(f.up?1:0)===y;
+    const stake=f.stake, fee=stake*(cfg('cfgfee')/100);
+    const payout=won?f.contracts:0;
+    const pnl=payout-stake-fee;
+    S.bank=Math.max(S.bank+pnl,1); M.trades++; if(won)M.wins++;
+    M.pnlSum+=pnl; M.staked+=stake;
+    S.pnl.push({t:w.id,pnl:M.pnlSum,bank:S.bank});
+    if(S.pnl.length>400)S.pnl.shift();
+    S.log.push({t:f.t,wid:w.id,up:f.up,px:f.px,tau:Math.round(f.tau),
+      stake:+stake.toFixed(2),contracts:+f.contracts.toFixed(2),kelly:f.kelly,
+      p:f.p,edge:f.edge,open:f.open,entry:f.spot,close:+close.toFixed(2),
+      y,won,payout:+payout.toFixed(2),fee:+fee.toFixed(2),pnl:+pnl.toFixed(2),
+      bank:+S.bank.toFixed(2),sim:cfg('cfgmkt')<=0});
+    if(S.log.length>200)S.log.shift();
+    renderLog();
+  }
+
+  S.hist.push({id:w.id,y,p:w.ref?w.ref.p:.5,p0:w.ref?w.ref.p0:.5,
+    open:w.open,close,fired:w.fired?(w.fired.up?'U':'D'):null});
+  if(S.hist.length>400)S.hist.shift();
+  dbPut(w,y); brainLearn(y); save();
+}
+
+/* ═══ BUCLE PRINCIPAL ═══ */
+function loop(){
+  tickWindow();
+  const now=Date.now();
+  document.getElementById('clock').textContent=new Date().toLocaleTimeString('es-ES',{hour12:false});
+  if(S.lastMsg&&now-S.lastMsg>12000&&S.conn==='live')setConn('warm','FEED EN PAUSA · SE REANUDA SOLO AL LLEGAR DATOS');
+
+  const pr=S.win&&S.win.open?predict(true):null;
+  S.live=pr;
+  if(pr){
+    const w=S.win;
+    const d=decide(pr);
+    for(const m of Array.from(w.marks)){
+      if(pr.tau<=m){w.marks.delete(m);
+        w.snaps.push({tau:pr.tau,L:pr.L,L0:pr.L0,p0:pr.p0,z:pr.z.slice(),scale:pr.scale});
+        if(m===60){w.ref={p:pr.p,p0:pr.p0};w.refC=d.c;}}
+    }
+    if(!w.ref&&pr.tau<=60){w.ref={p:pr.p,p0:pr.p0};w.refC=d.c;}
+    /* Muestra única por ventana para el diagnóstico. No decide nada. */
+    if(!w.gsamp&&pr.tau<=120){
+      w.gsamp=1;
+      const r = !d.ready ? 'calentando' : !polyGateOK() ? 'sin mercado'
+              : d.tooRich ? 'precio>máx' : d.kelly<=0 ? 'kelly cero'
+              : d.edge<cfg('cfgedge')/100 ? 'edge bajo' : 'condiciones ok';
+      S.gateLog=S.gateLog||[];
+      S.gateLog.push({t:Date.now(),r,edge:d.edge,px:d.px,p:pr.p,p0:pr.p0});
+      if(S.gateLog.length>300)S.gateLog.shift();
+    }
+    if(d.fire&&!w.fired&&!polyGateOK()){
+      w.polyBlock=(w.polyBlock||0)+1; S.polyBlocked=(S.polyBlocked||0)+1;
+    }
+    if(d.fire&&!w.fired&&polyGateOK()){
+      const stake=S.bank*d.kelly;
+      w.fired={up:d.up,px:d.px,kelly:d.kelly,p:pr.p,pK:d.pK,edge:d.edge,
+        t:Date.now(),tau:pr.tau,stake,contracts:stake/d.px,
+        bank:S.bank,spot:S.spot,open:w.open};
+    }
+    render(pr,d);
+  }
+}
+
+/* ═══ RENDER ═══ */
+function sparkPush(k,v){const a=S.sparks[k]||(S.sparks[k]=[]);a.push(v);if(a.length>40)a.shift();return a;}
+function drawSpark(cv,arr,col){
+  const ctx=cv.getContext('2d'),W=cv.width=cv.clientWidth*2,H=cv.height=32;
+  ctx.clearRect(0,0,W,H); if(arr.length<2)return;
+  const mx=Math.max(...arr.map(Math.abs),.5);
+  ctx.strokeStyle='rgba(122,122,150,.25)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();
+  arr.forEach((v,i)=>{const x=i/(arr.length-1)*W,y=H/2-(v/mx)*(H/2-3);
+    i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+  ctx.stroke();
+}
+
+function render(pr,d){
+  const w=S.win, pct=pr.p*100;
+  const col=pr.p>.58?'var(--green)':pr.p<.42?'var(--red)':'var(--cyan)';
+  const pb=document.getElementById('pbig');
+  pb.innerHTML=fmt(pct,1)+'<sub>%</sub>'; pb.style.color=col;
+
+  const dirUp=pr.p>=.5, conv=Math.abs(pr.p-.5)*2;
+  const db=document.getElementById('dirb');
+  db.textContent=conv<.16?'NEUTRAL':(dirUp?'▲ ALCISTA':'▼ BAJISTA')+(conv>.5?' · FUERTE':'');
+  db.style.borderColor=conv<.16?'var(--faint)':col; db.style.color=conv<.16?'var(--dim)':col;
+  const g=document.getElementById('gz');
+  g.style.background=col;
+  g.style.left=(dirUp?50:50-conv*50)+'%'; g.style.width=(conv*50)+'%';
+
+  document.getElementById('wid').textContent=new Date(w.start).toLocaleTimeString('es-ES',{hour12:false,hour:'2-digit',minute:'2-digit'})+
+    '–'+new Date(w.end).toLocaleTimeString('es-ES',{hour12:false,hour:'2-digit',minute:'2-digit'});
+
+  const dl=(S.spot/w.open-1)*100;
+  const _q=S.lastMsg?(Date.now()-S.lastMsg)/1000:9999;
+  const _ts=document.getElementById('tkspot');
+  _ts.textContent='$'+S.spot.toLocaleString('en-US',{maximumFractionDigits:1})+(_q>10?' ⚠':'');
+  _ts.className='v '+(_q>10?'r':'c');
+  document.getElementById('tkopen').textContent='$'+w.open.toLocaleString('en-US',{maximumFractionDigits:1});
+  const td=document.getElementById('tkdelta');
+  td.textContent=(dl>=0?'+':'')+fmt(dl,3)+'%'; td.className='v '+(dl>=0?'g':'r');
+  document.getElementById('tkleft').textContent=Math.floor(pr.tau/60)+':'+String(Math.floor(pr.tau%60)).padStart(2,'0');
+  document.getElementById('tksig').textContent='±'+fmt(S.sigSec*Math.sqrt(300)*100,3)+'%';
+  document.getElementById('tkn').textContent=M.n.toLocaleString();
+
+  document.getElementById('mbase').textContent=fmt(pr.p0*100,1)+'%';
+  const mm=document.getElementById('mmicro');
+  const dp=(pr.p-pr.p0)*100;
+  mm.textContent=(dp>=0?'+':'')+fmt(dp,1)+'pp';
+  mm.className='v '+(Math.abs(dp)<.5?'d':dp>0?'g':'r');
+  document.getElementById('mmkt').textContent=fmt(d.c*100,1)+'¢';
+  const me=document.getElementById('medge');
+  me.textContent=(d.edge>=0?'+':'')+fmt(d.edge*100,1)+'pp';
+  me.className='v '+(d.edge>=cfg('cfgedge')/100?'g':d.edge>0?'a':'r');
+
+  const gb=document.getElementById('gate');
+  const w2=S.win;
+  if(!d.ready){
+    /* Solo cambia el TEXTO: 'ready' ya era falso por feed caído y el gate ya
+       bloqueaba. Antes mostraba "Calentando · faltan 0 muestras", que es
+       contradictorio cuando el motivo real es que no hay datos. */
+    const need=Math.max(cfg('cfgmin')-M.n,0);
+    const qm=S.lastMsg?Math.round((Date.now()-S.lastMsg)/1000):null;
+    if(need>0){
+      gb.innerHTML='<span class="dot warn"></span><span class="d">Calentando · faltan <b class="a">'+need.toLocaleString()+
+        '</b> muestras resueltas antes de emitir señal operable.</span>';
+    } else {
+      gb.innerHTML='<span class="dot off"></span><span class="d"><b class="r">Feed '+
+        (S.conn==='down'?'desconectado':'sin datos')+'</b> — el precio lleva '+
+        (qm===null?'sin llegar nunca':qm+'s congelado')+
+        ', así que la probabilidad y el edge que ves están calculados sobre un precio muerto. '+
+        'El gate está bloqueado hasta que vuelva.</span>';
+    }
+  } else if(w2.fired){
+    gb.innerHTML='<span class="dot on"></span><span class="d">Ticket abierto en esta ventana — detalle abajo.</span>';
+  } else if(d.tooRich){
+    gb.innerHTML='<span class="dot"></span><span class="d">Sin operación — el contrato cotiza a '+fmt(d.px*100,1)+
+      '¢, por encima del tope de '+fmt(d.maxpx*100,0)+'¢. A ese precio la comisión se come cualquier edge.</span>';
+  } else {
+    gb.innerHTML='<span class="dot"></span><span class="d">Sin operación — edge '+fmt(d.edge*100,1)+
+      'pp por debajo del umbral de '+fmt(cfg('cfgedge'),1)+'pp tras comisión.</span>';
+  }
+  renderTicket(pr,d);
+
+  /* logit */
+  const lc=document.getElementById('logits');
+  const rows=FEATS.map((f,i)=>({n:f[1],v:pr.contrib[i]})).sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
+  const mxa=Math.max(...rows.map(r=>Math.abs(r.v)),.12);
+  lc.innerHTML='<div class="lg" style="border-bottom:1px solid var(--line2);padding-bottom:7px;margin-bottom:5px">'+
+    '<div class="lgt y">Offset baseline</div><div class="lgbar"><i></i><b style="background:var(--gold);left:'+
+    (pr.L0>=0?50:50+Math.max(pr.L0,-4)/4*50)+'%;width:'+(Math.min(Math.abs(pr.L0),4)/4*50)+'%"></b></div>'+
+    '<div class="lgv y">'+(pr.L0>=0?'+':'')+fmt(pr.L0,2)+'</div></div>'+
+    rows.map(r=>{const wd=Math.abs(r.v)/mxa*50,cc=r.v>0?'var(--green)':'var(--red)';
+      return '<div class="lg"><div class="lgt">'+r.n+'</div><div class="lgbar"><i></i><b style="background:'+cc+
+      ';left:'+(r.v>0?50:50-wd)+'%;width:'+wd+'%"></b></div><div class="lgv" style="color:'+cc+'">'+
+      (r.v>0?'+':'')+fmt(r.v,2)+'</div></div>';}).join('');
+
+  /* features */
+  const fc=document.getElementById('feats');
+  if(!fc.dataset.built){
+    fc.innerHTML=FEATS.map((f,i)=>'<div class="ft"><div class="ftn">'+f[1]+'<small>'+f[2]+
+      '</small></div><canvas class="spark" id="sp'+i+'"></canvas><div class="ftv" id="fv'+i+'">—</div></div>').join('');
+    fc.dataset.built='1';
+  }
+  FEATS.forEach((f,i)=>{
+    const v=pr.z[i], el=document.getElementById('fv'+i);
+    el.textContent=(v>=0?'+':'')+fmt(v,2);
+    el.style.color=Math.abs(v)<.4?'var(--dim)':v>0?'var(--green)':'var(--red)';
+    drawSpark(document.getElementById('sp'+i),sparkPush(f[0],v),
+      Math.abs(v)<.4?'rgba(122,122,150,.65)':v>0?'#00FF88':'#FF4757');
+  });
+
+  renderGrid(pr,d); renderMetrics(); drawCal(); drawPnl(); renderPop(); renderGate(); renderConn();
+  if(!render._t||Date.now()-render._t>8000){render._t=Date.now();
+    dbStat().then(()=>{renderLab();renderValid();});renderShadow();}
+}
+
+function renderGrid(pr,d){
+  const el=document.getElementById('rgrid'), h=S.hist.slice(-23);
+  const cells=h.map(x=>{
+    const won=(x.p>=.5?1:0)===x.y;
+    const t=new Date(x.id).toLocaleTimeString('es-ES',{hour12:false,hour:'2-digit',minute:'2-digit'});
+    return '<div class="rc '+(won?'w':'l')+'"><div class="p">'+Math.round(x.p*100)+'</div><div class="t">'+t+'</div></div>';});
+  cells.push('<div class="rc live"><div class="p">'+Math.round(pr.p*100)+'</div><div class="t">EN VIVO</div></div>');
+  el.innerHTML=cells.join('');
+  const won=h.filter(x=>(x.p>=.5?1:0)===x.y).length;
+  document.getElementById('rgstat').textContent=S.hist.length+' resueltas · '+
+    (h.length?Math.round(won/h.length*100)+'% en las últimas '+h.length:'—');
+}
+
+function renderMetrics(){
+  const n=M.sN||1;
+  const mb=M.sMB/n, bb=M.sBB/n, cb=(M.sCB||M.sBB)/n;
+  const skill=cb>0?(1-mb/cb)*100:0, calGain=bb>0?(1-cb/bb)*100:0;
+  document.getElementById('mbrier').textContent=M.sN?fmt(mb,4):'—';
+  document.getElementById('bbrier').textContent=M.sN?fmt(cb,4):'—';
+  const cg=document.getElementById('mcal');
+  if(cg){cg.textContent=M.sN?(calGain>=0?'+':'')+fmt(calGain,2)+'%':'—';
+    cg.className='v '+(M.sN<=50?'d':Math.abs(calGain)>3?'a':'d');}
+  const sk=document.getElementById('mskill');
+  sk.textContent=M.sN>50?(skill>=0?'+':'')+fmt(skill,2)+'%':'—';
+  sk.className='v '+(M.sN<=50?'d':skill>.5?'g':skill>0?'a':'r');
+  document.getElementById('mll').textContent=M.sN?fmt(M.sLL/n,4):'—';
+  document.getElementById('macc').textContent=M.sN?fmt(M.sAcc/n*100,1)+'%':'—';
+  let ece=0,tot=0;
+  M.bins.forEach(b=>{if(b.n){ece+=b.n*Math.abs(b.p/b.n-b.y/b.n);tot+=b.n;}});
+  document.getElementById('mece').textContent=tot?fmt(ece/tot*100,2)+'%':'—';
+  const ev=document.getElementById('edgeverdict');
+  if(M.sN<200){ev.textContent='muestra insuficiente';ev.className='lbl';}
+  else if(skill>1){ev.innerHTML='<span class="g">la capa micro aporta</span>';}
+  else if(skill>0){ev.innerHTML='<span class="a">aporte marginal</span>';}
+  else {ev.innerHTML='<span class="r">sin edge sobre el baseline</span>';}
+
+  document.getElementById('pnlstat').textContent=M.trades+' operaciones';
+  const pp=document.getElementById('ppnl');
+  pp.textContent=usd(M.pnlSum); pp.className='v '+(M.pnlSum>0?'g':M.pnlSum<0?'r':'d');
+  document.getElementById('pwr').textContent=M.trades?fmt(M.wins/M.trades*100,1)+'%':'—';
+  const bk=document.getElementById('pbank'); if(bk){bk.textContent=usd(S.bank);
+    bk.className='v '+(S.bank>1000?'g':S.bank<1000?'r':'d');}
+  const roi=M.staked>0?M.pnlSum/M.staked*100:0;
+  const pr2=document.getElementById('proi');
+  pr2.textContent=M.trades?(roi>=0?'+':'')+fmt(roi,2)+'%':'—';
+  pr2.className='v '+(roi>0?'g':roi<0?'r':'d');
+}
+
+function drawCal(){
+  const cv=document.getElementById('calcv'),ctx=cv.getContext('2d');
+  const W=cv.width=cv.clientWidth*2,H=cv.height=300,P=34;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,.055)';ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=P+(H-2*P)*i/4,x=P+(W-2*P)*i/4;
+    ctx.beginPath();ctx.moveTo(P,y);ctx.lineTo(W-P,y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x,P);ctx.lineTo(x,H-P);ctx.stroke();}
+  ctx.strokeStyle='rgba(212,175,55,.35)';ctx.setLineDash([5,5]);ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(P,H-P);ctx.lineTo(W-P,P);ctx.stroke();ctx.setLineDash([]);
+  const pts=[];
+  M.bins.forEach(b=>{if(b.n>=4)pts.push({x:b.p/b.n,y:b.y/b.n,n:b.n});});
+  if(!pts.length){ctx.fillStyle='#4A4A62';ctx.font='500 22px "IBM Plex Mono"';ctx.textAlign='center';
+    ctx.fillText('acumulando muestras',W/2,H/2);return;}
+  const X=v=>P+v*(W-2*P), Y=v=>H-P-v*(H-2*P);
+  ctx.strokeStyle='#00D4FF';ctx.lineWidth=3;ctx.beginPath();
+  pts.forEach((p,i)=>i?ctx.lineTo(X(p.x),Y(p.y)):ctx.moveTo(X(p.x),Y(p.y)));ctx.stroke();
+  pts.forEach(p=>{ctx.fillStyle='#00D4FF';ctx.beginPath();
+    ctx.arc(X(p.x),Y(p.y),Math.min(4+Math.log1p(p.n)*2,11),0,7);ctx.fill();});
+  ctx.fillStyle='#4A4A62';ctx.font='500 18px "IBM Plex Mono"';
+  ctx.textAlign='left';ctx.fillText('0%',P,H-10);
+  ctx.textAlign='right';ctx.fillText('100% predicho',W-P,H-10);
+}
+
+function drawPnl(){
+  const cv=document.getElementById('pnlcv'),ctx=cv.getContext('2d');
+  const W=cv.width=cv.clientWidth*2,H=cv.height=236,P=16;
+  ctx.clearRect(0,0,W,H);
+  if(S.pnl.length<2){ctx.fillStyle='#4A4A62';ctx.font='500 20px "IBM Plex Mono"';ctx.textAlign='center';
+    ctx.fillText('sin operaciones cerradas',W/2,H/2);return;}
+  const v=S.pnl.map(p=>p.pnl), mn=Math.min(0,...v), mx=Math.max(0,...v), rg=(mx-mn)||1;
+  const X=i=>P+i/(v.length-1)*(W-2*P), Y=x=>H-P-(x-mn)/rg*(H-2*P);
+  ctx.strokeStyle='rgba(255,255,255,.07)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(P,Y(0));ctx.lineTo(W-P,Y(0));ctx.stroke();
+  const last=v[v.length-1], col=last>=0?'#00FF88':'#FF4757';
+  const gr=ctx.createLinearGradient(0,P,0,H-P);
+  gr.addColorStop(0,last>=0?'rgba(0,255,136,.2)':'rgba(255,71,87,.18)');
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath();ctx.moveTo(X(0),Y(0));v.forEach((x,i)=>ctx.lineTo(X(i),Y(x)));
+  ctx.lineTo(X(v.length-1),Y(0));ctx.closePath();ctx.fillStyle=gr;ctx.fill();
+  ctx.strokeStyle=col;ctx.lineWidth=3;ctx.beginPath();
+  v.forEach((x,i)=>i?ctx.lineTo(X(i),Y(x)):ctx.moveTo(X(i),Y(x)));ctx.stroke();
+}
+
+
+
+
+
+
+/* ═══ ESTADO DE LA VALIDACIÓN ═══ */
+function renderValid(){
+  const el=document.getElementById('valid'); if(!el)return;
+  const n=DB.n, need=1000;
+  const dropRate=S.skipped/Math.max(S.skipped+S.hist.length,1);
+  const real=!!polyPrice();
+  let ece=0,tot=0; M.bins.forEach(b=>{if(b.n){ece+=b.n*Math.abs(b.p/b.n-b.y/b.n);tot+=b.n;}});
+  ece = tot?ece/tot*100:99;
+  const ci=S.lastCI;
+
+  const chk=[
+    {ok:n>=need, t:'Ventanas limpias en el ledger',
+     v:n.toLocaleString()+' / '+need.toLocaleString(),
+     h:n>=need?'suficiente para el bootstrap':'faltan ~'+Math.ceil((need-n)/12)+'h de ejecución continua'},
+    {ok:dropRate<.10, t:'Tasa de descarte por suspensión',
+     v:(dropRate*100).toFixed(1)+'%',
+     h:dropRate<.10?'los datos son continuos':'el celular está durmiendo la pestaña — los datos no sirven'},
+    {ok:real, t:'Precio contra libro real',
+     v:real?'Polymarket':'simulado',
+     h:real?'el edge se mide contra la cotización de verdad':'estás midiendo contra un mercado que yo inventé'},
+    {ok:M.sN>500&&ece<3, t:'Calibración del modelo (ECE)',
+     v:M.sN?ece.toFixed(2)+'%':'—',
+     h:ece<3?'las probabilidades son fiables':'cuando dice 70% no ocurre el 70% de las veces'},
+    {ok:!!ci&&ci.lo>0, t:'IC 95% del skill enteramente > 0',
+     v:ci?ci.lo.toFixed(2)+' a '+ci.hi.toFixed(2):'sin correr',
+     h:!ci?'corre el bootstrap en el laboratorio':ci.lo>0?'hay evidencia de edge real':'no distinguible del ruido'},
+  ];
+  const pass=chk.filter(c=>c.ok).length;
+  el.innerHTML=
+    '<div class="vhead"><div class="vbig '+(pass===5?'g':pass>=3?'a':'r')+'">'+pass+'<span>/5</span></div>'+
+    '<div class="vtxt">'+(pass===5
+      ? '<b class="g">Los cinco filtros pasan.</b> Es el momento de portar el motor a Node y correr dry-run contra el libro real.'
+      : '<b class="a">Faltan '+(5-pass)+' filtros.</b> Cada uno invalida cualquier conclusión sobre tu edge, por bueno que se vea el PnL.')+
+    '</div></div>'+
+    chk.map(c=>'<div class="vrow"><span class="vdot '+(c.ok?'ok':'no')+'"></span>'+
+      '<div class="vlab">'+c.t+'<small>'+c.h+'</small></div>'+
+      '<div class="vval '+(c.ok?'g':'d')+'">'+c.v+'</div></div>').join('');
+}
+
+/* ═══ SOMBRA ═══ */
+function renderShadow(){
+  const el=document.getElementById('shadow'); if(!el)return;
+  const seen=M.shSeen||0;
+  if(!M.shN){el.innerHTML='<div class="empty">'+(seen?seen+' ventanas evaluadas, ninguna superó el umbral todavía.':'Aún sin ventanas evaluadas.')+'</div>';return;}
+  const n0=M.sh0N||1;
+  const per=M.shPnl/M.shN, per0=M.sh0Pnl/n0, d=per-per0;
+  /* error estándar del edge por contrato ≈ sqrt(p(1-p)/n), acotado por 0.5 */
+  const se=0.5/Math.sqrt(M.shN), t=se>0?per/se:0;
+  el.innerHTML='<div class="mtx" style="grid-template-columns:repeat(2,1fr)">'+
+    '<div class="mt"><div class="lbl">Disparos</div><div class="v">'+M.shN.toLocaleString()+'</div><div class="s">de '+seen.toLocaleString()+' ventanas</div></div>'+
+    '<div class="mt"><div class="lbl">Edge realizado</div><div class="v '+(per>0?'g':'r')+'">'+(per>=0?'+':'')+fmt(per*100,2)+'¢</div><div class="s">por contrato</div></div>'+
+    '<div class="mt"><div class="lbl">Baseline</div><div class="v d">'+(per0>=0?'+':'')+fmt(per0*100,2)+'¢</div><div class="s">'+n0.toLocaleString()+' disparos</div></div>'+
+    '<div class="mt"><div class="lbl">Ventaja</div><div class="v '+(d>0?'g':'r')+'">'+(d>=0?'+':'')+fmt(d*100,2)+'¢</div><div class="s">modelo − base</div></div>'+
+    '<div class="mt"><div class="lbl">t aproximado</div><div class="v '+(Math.abs(t)>2?(t>0?'g':'r'):'d')+'">'+fmt(t,2)+'</div><div class="s">|t|&gt;2 = señal</div></div>'+
+    '<div class="mt"><div class="lbl">Acierto</div><div class="v">'+fmt(M.shWins/M.shN*100,1)+'%</div><div class="s">base '+fmt(M.sh0Wins/n0*100,1)+'%</div></div>'+
+    '</div><div class="labn">Un contrato fijo por ventana que supere el umbral. El resultado es (acierto − precio − comisión), acotado, así no lo domina la varianza del dimensionamiento como el PnL con Kelly.<br>'+
+    '<b style="color:var(--txt)">Ojo con la potencia:</b> en simulación, con un edge real de +3pp esta métrica solo lo detecta el 25% de las veces a 600 ventanas y el 58% a 2,000. Un resultado plano no prueba que no haya edge — prueba que aún no tienes muestra. El bootstrap del laboratorio es más potente porque usa los 9 snapshots de cada ventana en vez de una sola apuesta.</div>';
+}
+
+
+
+
+
+/* ═══ LIBRO DE BINANCE PREDICTION MARKETS ═══
+   Spec: wss://api.binance.com/sapi/wss?random=&topic=web3_prediction_orderbook_{marketId}
+         &recvWindow=30000&timestamp=&signature=
+   Auth: cabecera X-MBX-APIKEY + HMAC-SHA256(query string ordenado, secret).
+   LIMITACIÓN DURA: el WebSocket del navegador NO admite cabeceras, así que
+   X-MBX-APIKEY no se puede enviar. Este cliente está completo y es correcto,
+   pero desde el navegador fallará en el handshake. En Node funciona tal cual.
+   Sobre: {type:"TOPIC", topic:"…", data:"<JSON en string>"} -> doble parse.
+   Payload: {msgType, marketId, updateTimestampMs, asks:[[p,s]], bids:[[p,s]]}
+   asks ascendente, bids descendente, precios como string en (0,1).           */
+const BNB = {on:false, ask:0, bid:0, mid:0, ts:0, upd:0, err:null, ws:null,
+             depth:null, mid_:0, raw:null};
+
+async function bnbSign(qs){
+  const k=await crypto.subtle.importKey('raw', new TextEncoder().encode(
+    (document.getElementById('bnbsec')||{}).value||''),
+    {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
+  const s=await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(qs));
+  return [...new Uint8Array(s)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function bnbConnect(){ bnbPoll(); }
+
+/* Lee del relay local en vez del WSS de Binance: el navegador no puede enviar
+   la cabecera X-MBX-APIKEY que exige la spec, así que el relay se conecta con
+   ella y reexpone el libro por HTTP con CORS abierto. */
+let bnbBusy=false;
+async function bnbPoll(){
+  if(!tog('cfgbnb')||bnbBusy)return;
+  const base=((document.getElementById('bnbrelay')||{}).value||'').replace(/\/$/,'');
+  const mid=((document.getElementById('bnbmkt')||{}).value||'').trim();
+  if(!base){BNB.err='falta la URL del relay';BNB.ask=0;renderBnb();return;}
+  if(!mid){BNB.err='falta el marketId — abre la raíz del relay para ver los activos';BNB.ask=0;renderBnb();return;}
+  bnbBusy=true;
+  try{
+    const r=await fetch(base+'/book?marketId='+encodeURIComponent(mid));
+    if(!r.ok){BNB.err='relay HTTP '+r.status;BNB.ask=0;return;}
+    const b=await r.json();
+    if(b.error||b.ask==null||b.bid==null){BNB.err=b.error||'libro vacío (mercado pausado o por resolver)';BNB.ask=0;return;}
+    if(Date.now()-b.ts>60000){BNB.err='libro obsoleto ('+Math.round((Date.now()-b.ts)/1000)+'s)';BNB.ask=0;return;}
+    BNB.ask=b.ask; BNB.bid=b.bid; BNB.mid=b.mid;
+    BNB.depth={a:b.askSize,b:b.bidSize,n:b.niveles};
+    BNB.ts=Date.now(); BNB.err=null;
+  }catch(e){
+    BNB.ask=0;
+    BNB.err=/Failed to fetch/.test(String(e))
+      ? 'no alcanzo el relay — ¿está corriendo? desde el móvil usa la IP del equipo, no localhost'
+      : String(e).slice(0,90);
+  }finally{bnbBusy=false;renderBnb();}
+}
+
+function bnbPrice(){
+  if(!tog('cfgbnb')||!BNB.ask||Date.now()-BNB.ts>25000)return null;
+  return {up:BNB.ask, dn:1-BNB.bid, mid:BNB.mid};
+}
+
+function renderBnb(){
+  const el=document.getElementById('bnbstat'); if(!el)return;
+  if(!tog('cfgbnb')){el.innerHTML='<span class="dot"></span><span class="d">Feed apagado.</span>';return;}
+  if(!BNB.ask){
+    el.innerHTML='<span class="dot '+(BNB.err&&/conectando/.test(BNB.err)?'warn':'off')+'"></span>'+
+      '<span class="d"><b class="r">'+(BNB.err||'sin datos')+'</b></span>'; return; }
+  const fee=cfg('cfgbnbfee')/100||0.018, be=BNB.ask/(1-fee);
+  el.innerHTML='<span class="dot on"></span><span class="d">Up compra a <b class="c">'+(BNB.ask*100).toFixed(1)+
+    '¢</b> vende a <b class="c">'+(BNB.bid*100).toFixed(1)+'¢</b> · spread '+((BNB.ask-BNB.bid)*100).toFixed(1)+
+    '¢ · equilibrio con comisión <b class="a">'+(be*100).toFixed(2)+'%</b>'+
+    (BNB.depth?'<br><span style="opacity:.5">profundidad '+BNB.depth.a.toFixed(1)+' / '+BNB.depth.b.toFixed(1)+
+     ' porciones · '+BNB.depth.n+' niveles</span>':'')+'</span>';
+}
+
+/* ═══ CUENTA POLYMARKET — SOLO CREDENCIALES L2 ═══
+   L1 (clave privada) NO entra aquí por diseño: se usa una vez en tu equipo
+   para derivar apiKey/secret/passphrase y esas son las que se guardan. Con L2
+   se leen órdenes, trades y posiciones. Colocar órdenes exige además firmar
+   cada payload con la clave privada, así que eso NO puede ocurrir en esta
+   página aunque alguien robara estas credenciales.
+   Firma: HMAC-SHA256( secret , timestamp + METHOD + path + body ) en
+   base64 url-safe con padding. Cabeceras POLY_ADDRESS, POLY_SIGNATURE,
+   POLY_TIMESTAMP, POLY_API_KEY, POLY_PASSPHRASE. Timestamp en segundos.   */
+const ACC = {addr:'', key:'', secret:'', pass:'', estado:null, datos:null};
+
+async function accLoad(){
+  try{const v=await stGet('icc:btc5m:acc'); if(v)Object.assign(ACC,JSON.parse(v));}catch(e){}
+  for(const [id,k] of [['accaddr','addr'],['acckey','key'],['accsec','secret'],['accpass','pass']]){
+    const el=document.getElementById(id); if(el)el.value=ACC[k]||'';
+  }
+  renderAcc();
+}
+function accSave(){
+  for(const [id,k] of [['accaddr','addr'],['acckey','key'],['accsec','secret'],['accpass','pass']]){
+    const el=document.getElementById(id); if(el)ACC[k]=el.value.trim();
+  }
+  stSet('icc:btc5m:acc',JSON.stringify({addr:ACC.addr,key:ACC.key,secret:ACC.secret,pass:ACC.pass}));
+  renderAcc();
+}
+function accWipe(){
+  if(!confirm('Se borrarán las credenciales guardadas en este dispositivo. ¿Continuar?'))return;
+  ACC.addr=ACC.key=ACC.secret=ACC.pass=''; ACC.estado=null; ACC.datos=null;
+  ['accaddr','acckey','accsec','accpass'].forEach(id=>{const e=document.getElementById(id); if(e)e.value='';});
+  stDel('icc:btc5m:acc'); renderAcc();
+}
+
+async function accHeaders(method, path, body){
+  const ts = Math.floor(Date.now()/1000).toString();
+  const msg = ts + method.toUpperCase() + path + (body||'');
+  const b64 = (ACC.secret||'').replace(/-/g,'+').replace(/_/g,'/');
+  let raw;
+  try{ raw = Uint8Array.from(atob(b64), c=>c.charCodeAt(0)); }
+  catch(e){ throw new Error('El secret no es base64 válido'); }
+  const k = await crypto.subtle.importKey('raw', raw, {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
+  const s = await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(msg));
+  let sig = btoa(String.fromCharCode(...new Uint8Array(s)));
+  sig = sig.replace(/\+/g,'-').replace(/\//g,'_');      // url-safe, con padding
+  return {POLY_ADDRESS:ACC.addr, POLY_SIGNATURE:sig, POLY_TIMESTAMP:ts,
+          POLY_API_KEY:ACC.key, POLY_PASSPHRASE:ACC.pass};
+}
+
+async function accProbar(){
+  accSave();
+  const set=(t)=>{ACC.estado=t;renderAcc();};
+  if(!ACC.addr||!ACC.key||!ACC.secret||!ACC.pass){ set({t:'err',m:'Faltan campos por rellenar.'}); return; }
+  if(!/^0x[a-fA-F0-9]{40}$/.test(ACC.addr)){ set({t:'err',m:'La dirección no tiene formato 0x + 40 hex.'}); return; }
+  if(!window.isSecureContext || !(crypto&&crypto.subtle)){
+    set({t:'err',m:'crypto.subtle no está disponible: el navegador solo lo expone en contexto seguro. Desde file:// es imposible firmar. Sube el archivo a https o sírvelo desde localhost.'}); return;
+  }
+  set({t:'wait',m:'Firmando y consultando…'});
+
+  /* 1) posiciones — data-api es público, sirve para validar la dirección */
+  try{
+    const r = await fetch('https://data-api.polymarket.com/positions?user='+ACC.addr+'&limit=100');
+    if(r.ok){ const j=await r.json();
+      ACC.datos = {pos: Array.isArray(j)?j:[], posOk:true}; }
+    else ACC.datos = {posErr:'HTTP '+r.status};
+  }catch(e){ ACC.datos = {posErr: /Failed to fetch/.test(String(e))?'CORS o red':String(e).slice(0,60)}; }
+
+  /* 2) órdenes abiertas — requiere las cinco cabeceras L2 */
+  try{
+    const path='/data/orders';
+    const h = await accHeaders('GET', path, '');
+    const r = await fetch('https://clob.polymarket.com'+path, {headers:h});
+    if(r.status===401){ set({t:'err',m:'401 — credenciales rechazadas. Revisa que apiKey, secret y passphrase sean del MISMO derive, y que la dirección sea la del firmante (no la del proxy).'}); return; }
+    if(!r.ok){ set({t:'err',m:'HTTP '+r.status+' al consultar órdenes.'}); return; }
+    const j = await r.json();
+    ACC.datos = Object.assign(ACC.datos||{}, {ord: Array.isArray(j)?j:(j.data||[])});
+    set({t:'ok',m:'Conectado. Credenciales L2 válidas.'});
+  }catch(e){
+    set({t:'err',m: /Failed to fetch/.test(String(e))
+      ? 'Bloqueado por CORS: el navegador manda un preflight OPTIONS por las cabeceras POLY_* y el servidor no lo autoriza desde este origen. Las lecturas privadas tendrán que hacerse desde un servidor, no desde esta página.'
+      : String(e).slice(0,120)});
+  }
+}
+
+function renderAcc(){
+  const el=document.getElementById('accstat'); if(!el)return;
+  const e=ACC.estado, d=ACC.datos;
+  let h='';
+  if(!e) h='<span class="dot"></span><span class="d">Sin probar. Rellena los campos y pulsa Probar conexión.</span>';
+  else if(e.t==='wait') h='<span class="dot warn"></span><span class="d">'+e.m+'</span>';
+  else if(e.t==='ok')  h='<span class="dot on"></span><span class="g">'+e.m+'</span>';
+  else h='<span class="dot off"></span><span class="d"><b class="r">'+e.m+'</b></span>';
+  el.innerHTML=h;
+  const dv=document.getElementById('accdatos'); if(!dv)return;
+  if(!d){dv.innerHTML='';return;}
+  let out='';
+  if(d.posOk){
+    const val=d.pos.reduce((a,p)=>a+(+p.currentValue||0),0);
+    out+='<div class="tkrow"><span>Posiciones abiertas</span><b>'+d.pos.length+'</b></div>'+
+         '<div class="tkrow"><span>Valor actual</span><b class="y">'+usd(val)+'</b></div>';
+    d.pos.slice(0,5).forEach(p=>{
+      const t=(p.title||p.slug||p.asset||'—').toString().slice(0,42);
+      out+='<div class="tkrow"><span style="opacity:.7">'+t+'</span><b>'+
+           (+p.size||0).toFixed(1)+' @ '+((+p.avgPrice||0)*100).toFixed(1)+'¢</b></div>';});
+  } else if(d.posErr) out+='<div class="tkrow"><span>Posiciones</span><b class="r">'+d.posErr+'</b></div>';
+  if(d.ord) out+='<div class="tkrow"><span>Órdenes abiertas</span><b>'+d.ord.length+'</b></div>';
+  dv.innerHTML=out;
+}
+
+/* ═══ SALUD DE LA CONEXIÓN (solo lectura) ═══ */
+function renderConn(){
+  const el=document.getElementById('conndiag'); if(!el)return;
+  const c=S.conStat;
+  if(!c){el.innerHTML='<div class="empty">Sin datos de conexión todavía.</div>';return;}
+  const now=Date.now();
+  const up=c.up+(c.live?now-c.t:0), dn=c.down+(c.live?0:now-c.t);
+  const tot=up+dn||1, pct=up/tot*100;
+  const hrs=tot/3600000;
+  const dph=hrs>0.05?c.drops/hrs:0;
+  const fz=S.frozenWin||0;
+  const col=pct>97?'g':pct>85?'a':'r';
+  el.innerHTML=
+    '<div class="mtx" style="grid-template-columns:repeat(2,1fr)">'+
+    '<div class="mt"><div class="lbl">Tiempo en línea</div><div class="v '+col+'">'+pct.toFixed(1)+'%</div><div class="s">de '+hrs.toFixed(1)+'h</div></div>'+
+    '<div class="mt"><div class="lbl">Caídas</div><div class="v '+(dph>4?'r':dph>1?'a':'g')+'">'+c.drops+'</div><div class="s">'+dph.toFixed(1)+'/hora</div></div>'+
+    '<div class="mt"><div class="lbl">Reanudadas</div><div class="v '+((S.recov||0)?'a':'d')+'">'+(S.recov||0)+'</div><div class="s">tras pausa</div></div>'+'<div class="mt"><div class="lbl">Congeladas</div><div class="v '+(fz?'r':'d')+'">'+fz+'</div><div class="s">etiqueta salvada</div></div>'+
+    '</div>'+
+    '<div class="labn">'+
+    (dph>4?'<b style="color:var(--red)">Más de 4 caídas por hora.</b> Con VPN activo y conmutación 5G/4G cada handover mata el WebSocket. Prueba a fijar la red en solo 4G, o cambia la fuente de precio en parámetros: Coinbase y Kraken tienen reglas de bloqueo distintas a Binance.'
+     :pct<90?'<b style="color:var(--amber)">Menos del 90% en línea.</b> Cada corte congela el precio y las ventanas afectadas se descartan.'
+     :'Conexión estable.')+
+    (fz?'<br><br><b style="color:var(--txt)">'+fz+' ventanas descartadas por precio congelado.</b> En cada una, apertura y cierre eran el mismo valor muerto y la etiqueta habría sido SUBIÓ por defecto — entrenamiento envenenado con sesgo alcista.':'')+
+    '</div>';
+}
+
+/* ═══ PANELES DE MEDICIÓN (solo lectura, no afectan a ninguna decisión) ═══ */
+function renderPop(){
+  const el=document.getElementById('pops'); if(!el)return;
+  const g=M.gN||0, u=M.uN||0;
+  if(!g&&!u){el.innerHTML='<div class="empty">Sin ventanas resueltas todavía.</div>';return;}
+  const sk=(mb,cb)=>cb>0?(1-mb/cb)*100:NaN;
+  const gs=g?sk(M.gMB/g,M.gCB/g):NaN, us=u?sk(M.uMB/u,M.uCB/u):NaN;
+  const ga=g?M.gAcc/g*100:NaN, ua=u?M.uAcc/u*100:NaN;
+  const gr=g?(M.gReal||0)/g*100:NaN;
+  const fila=(t,n,s,a,e)=>
+    '<div class="prow"><div class="plab">'+t+'<small>'+n.toLocaleString()+' ventanas</small></div>'+
+    '<div class="pval '+(Number.isFinite(s)?(s>0?'g':'r'):'d')+'">'+(Number.isFinite(s)?(s>=0?'+':'')+s.toFixed(2)+'%':'—')+'</div>'+
+    '<div class="pval">'+(Number.isFinite(a)?a.toFixed(1)+'%':'—')+'</div>'+
+    '<div class="pval '+(Number.isFinite(e)?(e>0?'g':'r'):'d')+'">'+(Number.isFinite(e)?(e>=0?'+':'')+e.toFixed(2)+'¢':'—')+'</div></div>';
+  let diag;
+  if(g<50) diag='<span class="d">Con '+g+' ventanas disparadas aún no hay muestra para comparar. Se necesitan ~50.</span>';
+  else if(!Number.isFinite(us)) diag='<span class="d">Faltan ventanas sin disparo para contrastar.</span>';
+  else if(gs<us-1) diag='<span class="r">Calibra PEOR donde opera ('+gs.toFixed(2)+'% vs '+us.toFixed(2)+'%).</span> Sesgo de selección: el gate elige justo las ventanas donde el modelo se equivoca.';
+  else if(gs>us+1) diag='<span class="g">Calibra mejor donde opera ('+gs.toFixed(2)+'% vs '+us.toFixed(2)+'%).</span> El gate está seleccionando ventanas favorables.';
+  else diag='<span class="a">Calibración equivalente en ambas.</span> El gate filtra por edge aparente, no por calidad del modelo.';
+  el.innerHTML='<div class="phead"><div class="plab">Población</div><div class="pval">Skill</div>'+
+    '<div class="pval">Acierto</div><div class="pval">Edge real</div></div>'+
+    fila('Disparó (operó)',g,gs,ga,gr)+fila('No disparó',u,us,ua,NaN)+
+    '<div class="labn" style="margin-top:11px">'+diag+'<br><br>"Edge real" = (acierto − precio pagado) por contrato en las ventanas donde operó: lo ganado por unidad de riesgo, sin Kelly de por medio.</div>';
+}
+
+function renderGate(){
+  const el=document.getElementById('gatediag'); if(!el)return;
+  const L=S.gateLog||[];
+  if(!L.length){el.innerHTML='<div class="empty">Acumulando muestras del gate.</div>';return;}
+  const rz={}; L.forEach(x=>rz[x.r]=(rz[x.r]||0)+1);
+  const orden=['condiciones ok','edge bajo','precio>máx','sin mercado','kelly cero','calentando'];
+  const cols={'condiciones ok':'var(--green)','edge bajo':'var(--amber)','precio>máx':'var(--cyan)',
+              'sin mercado':'var(--red)','kelly cero':'var(--dim)','calentando':'var(--faint)'};
+  const n=L.length;
+  const rows=orden.filter(r=>rz[r]).map(r=>{const c=rz[r];
+    return '<div class="lg"><div class="lgt">'+r+'</div><div class="lgbar"><b style="background:'+cols[r]+
+      ';left:0;width:'+(c/n*100)+'%"></b></div><div class="lgv">'+c+'</div></div>';}).join('');
+  const es=L.map(x=>x.edge*100).sort((a,b)=>a-b);
+  const q=p=>es[Math.floor(p*es.length)]||0;
+  const thr=cfg('cfgedge');
+  const nota=q(.5)<thr
+    ? 'Mediana del edge '+q(.5).toFixed(2)+'pp frente a tu umbral de '+thr.toFixed(1)+
+      'pp. Bajarlo a '+Math.max(q(.5),0.5).toFixed(1)+'pp dispararía en la mitad de las ventanas.'
+    : 'El edge mediano supera tu umbral.';
+  const bl=S.polyBlocked||0;
+  el.innerHTML=rows+'<div class="labn">Una muestra por ventana a τ≈120s — es diagnóstico, no interviene en las decisiones.<br>'+
+    'Edge en '+n+' muestras: p50 '+q(.5).toFixed(2)+'pp · p90 '+q(.9).toFixed(2)+'pp · máx '+q(.99).toFixed(2)+'pp.<br>'+
+    nota+(bl?'<br><b style="color:var(--txt)">'+bl+' disparos bloqueados por mercado cerrado en Polymarket.</b>':'')+'</div>';
+}
+
+/* ═══ TICKET DE OPERACIÓN ═══
+   Todo lo congelado en el momento del disparo, más el valor a mercado en vivo.
+   La captura anterior mezclaba ambos y por eso parecía contradictoria.        */
+function renderTicket(pr,d){
+  const el=document.getElementById('ticket'); if(!el)return;
+  const w=S.win, f=w&&w.fired;
+  const sim=!polyPrice()&&cfg('cfgmkt')<=0;
+
+  if(!f){
+    el.innerHTML='<div class="tkempty">Sin posición abierta en esta ventana.<br>'+
+      '<span class="d">Banco disponible <b class="y">'+usd(S.bank)+'</b> · '+
+      'si dispara, apostaría <b class="c">'+usd(S.bank*Math.max(d.kelly,0))+'</b> ('+
+      fmt(Math.max(d.kelly,0)*100,1)+'% por Kelly '+cfg('cfgkelly')+')</span></div>';
+    return;
+  }
+
+  /* lado elegido y su probabilidad ahora */
+  const pNow = f.up ? pr.p : 1-pr.p;
+  const mark = f.up ? d.c : 1-d.c;               // valor a mercado del contrato
+  const value = f.contracts * mark;
+  const unreal = value - f.stake - f.stake*(cfg('cfgfee')/100);
+  const winning = pNow >= .5;
+  const col = winning ? 'g' : 'r';
+  const dirCol = f.up ? 'var(--green)' : 'var(--red)';
+  const elapsed = Math.round((Date.now()-f.t)/1000);
+
+  el.innerHTML =
+  '<div class="tkhead">'+
+    '<div class="tkdir" style="border-color:'+dirCol+';color:'+dirCol+'">'+(f.up?'▲ UP':'▼ DOWN')+'</div>'+
+    '<div class="tkstat '+col+'">'+(winning?'GANANDO':'PERDIENDO')+'</div>'+
+    (sim?'<div class="tksim">MERCADO SIMULADO</div>':'<div class="tksim" style="color:var(--green);border-color:rgba(0,255,136,.3)">LIBRO REAL POLYMARKET</div>')+
+  '</div>'+
+  '<div class="tkrow"><span>Apostado</span><b class="y">'+usd(f.stake)+'</b></div>'+
+  '<div class="tkrow"><span>Precio de entrada</span><b>'+fmt(f.px*100,1)+'¢</b></div>'+
+  '<div class="tkrow"><span>Contratos comprados</span><b>'+fmt(f.contracts,2)+'</b></div>'+
+  '<div class="tkrow"><span>Si gana, cobras</span><b class="g">'+usd(f.contracts)+'</b> '+
+    '<span class="tkd">(+'+usd(f.contracts-f.stake-f.stake*(cfg('cfgfee')/100))+' neto)</span></div>'+
+  '<div class="tkrow"><span>Si pierde, pierdes</span><b class="r">'+usd(f.stake+f.stake*(cfg('cfgfee')/100))+'</b></div>'+
+  '<div class="tksep"></div>'+
+  '<div class="tkrow"><span>P(ganar) al entrar</span><b>'+fmt((f.up?f.p:1-f.p)*100,1)+'%</b></div>'+
+  '<div class="tkrow"><span>P(ganar) ahora</span><b class="'+col+'">'+fmt(pNow*100,1)+'%</b></div>'+
+  '<div class="tkrow"><span>Valor a mercado</span><b class="'+(unreal>=0?'g':'r')+'">'+usd(value)+'</b> '+
+    '<span class="tkd">('+(unreal>=0?'+':'')+usd(unreal)+')</span></div>'+
+  '<div class="tksep"></div>'+
+  '<div class="tkrow"><span>Kelly aplicado</span><b>'+fmt(f.kelly*100,2)+'% del banco</b> '+
+    '<span class="tkd">(p encogida '+fmt((f.pK||f.p)*100,1)+'% para dimensionar)</span></div>'+
+  '<div class="tkrow"><span>Edge al entrar</span><b>+'+fmt(f.edge*100,2)+'pp</b></div>'+
+  '<div class="tkrow"><span>Entró con</span><b>'+Math.floor(f.tau/60)+':'+String(Math.round(f.tau%60)).padStart(2,'0')+
+    ' restantes</b> <span class="tkd">(hace '+elapsed+'s)</span></div>'+
+  '<div class="tkrow"><span>Precio a batir / spot</span><b>'+f.open.toFixed(1)+' → '+S.spot.toFixed(1)+'</b></div>'+
+  '<div class="tkrow"><span>Resuelve a las</span><b>'+new Date(w.end).toLocaleTimeString('es-ES',{hour12:false})+'</b></div>';
+}
+
+/* ═══ REGISTRO DE OPERACIONES ═══ */
+function renderLog(){
+  const el=document.getElementById('oplog'); if(!el)return;
+  if(!S.log.length){el.innerHTML='<div class="empty">Sin operaciones cerradas.</div>';return;}
+  const rows=S.log.slice(-14).reverse().map(o=>
+    '<tr class="'+(o.won?'w':'l')+'">'+
+    '<td>'+new Date(o.t).toLocaleTimeString('es-ES',{hour12:false,hour:'2-digit',minute:'2-digit'})+'</td>'+
+    '<td class="'+(o.up?'g':'r')+'">'+(o.up?'UP':'DN')+'</td>'+
+    '<td>'+fmt(o.px*100,1)+'¢</td>'+
+    '<td>'+usd(o.stake)+'</td>'+
+    '<td>'+fmt(o.contracts,1)+'</td>'+
+    '<td class="'+(o.won?'g':'r')+'">'+(o.won?'GANÓ':'PERDIÓ')+'</td>'+
+    '<td class="'+(o.pnl>=0?'g':'r')+'">'+(o.pnl>=0?'+':'')+o.pnl.toFixed(2)+'</td>'+
+    '<td class="d">'+usd(o.bank)+'</td></tr>').join('');
+  el.innerHTML='<table class="optbl"><thead><tr><th>Hora</th><th>Dir</th><th>Entrada</th>'+
+    '<th>Apostó</th><th>Contr.</th><th>Result.</th><th>PnL</th><th>Banco</th></tr></thead><tbody>'+
+    rows+'</tbody></table>';
+}
+
+function exportOps(){
+  if(!S.log.length)return;
+  const h='hora,ventana,direccion,precio_entrada_c,contratos,apostado_usd,kelly_pct,p_entrada,edge_pp,'+
+    'tau_entrada_s,precio_batir,spot_entrada,cierre,resultado,cobro_usd,comision_usd,pnl_usd,banco_usd,mercado_simulado';
+  const rows=S.log.map(o=>[new Date(o.t).toISOString(),new Date(o.wid).toISOString(),o.up?'UP':'DOWN',
+    (o.px*100).toFixed(2),o.contracts,o.stake,(o.kelly*100).toFixed(3),(o.p*100).toFixed(2),
+    (o.edge*100).toFixed(3),o.tau,o.open,o.entry,o.close,o.won?'GANO':'PERDIO',o.payout,o.fee,o.pnl,o.bank,
+    o.sim?'SI':'NO'].join(','));
+  try{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([h+'\n'+rows.join('\n')],{type:'text/csv'}));
+    a.download='icc_operaciones_'+new Date().toISOString().slice(0,10)+'.csv';
+    document.body.appendChild(a);a.click();a.remove();
+  }catch(e){}
+}
+
+/* ═══ NÚCLEO DE CÓMPUTO PARALELO ═══
+   Los workers no existen para "pensar más fuerte" — un logit de 9 features
+   converge en milisegundos. Existen para responder la única pregunta que
+   importa: ¿el skill score es real o es ruido muestral? Eso se responde con
+   bootstrap sobre miles de remuestreos, y eso sí consume todos los núcleos.  */
+
+const WSRC = `
+const clamp=(v,a,b)=>v<a?a:v>b?b:v, sig=z=>1/(1+Math.exp(-clamp(z,-30,30)));
+const NF=9, SN=9; let D=null;
+
+function train(lr,mask,l2,cut){
+  const w=new Float64Array(NF), g=new Float64Array(NF).fill(1e-4);
+  let b=0,gb=1e-4,a=1,c=0,a0=1,c0=0;
+  const n=D.Y.length, m=n-cut;
+  const bm=new Float64Array(m), bc=new Float64Array(m), br=new Float64Array(m);
+  let acc=0, cnt=0;
+  for(let k=0;k<n;k++){
+    const y=D.Y[k]; let sm=0,sc=0,sr=0;
+    for(let s=0;s<SN;s++){
+      const zi=(k*SN+s)*NF, l=D.L[k*SN+s], sk=D.C[k*SN+s];
+      let dz=b;
+      for(let i=0;i<NF;i++){ if(mask&&!mask[i])continue; dz+=w[i]*D.Z[zi+i]; }
+      const L=l+sk*dz;
+      const pM=clamp(sig(a*L+c),.001,.999);
+      const pC=clamp(sig(a0*l+c0),.001,.999);
+      const pR=clamp(sig(l),.001,.999);
+      if(k>=cut){ sm+=(pM-y)*(pM-y); sc+=(pC-y)*(pC-y); sr+=(pR-y)*(pR-y);
+                  acc+=((pM>.5?1:0)===y)?1:0; cnt++; }
+      const gr=(sig(L)-y)*sk;
+      for(let i=0;i<NF;i++){ if(mask&&!mask[i])continue;
+        const gi=gr*D.Z[zi+i]+l2*w[i]; g[i]+=gi*gi;
+        w[i]=clamp(w[i]-lr*gi/Math.sqrt(g[i]+1e-8),-2.5,2.5); }
+      gb+=gr*gr; b=clamp(b-lr*gr/Math.sqrt(gb+1e-8),-1,1);
+      const ga=pM-y; a=clamp(a-.004*ga*L,.2,3); c=clamp(c-.004*ga,-1.5,1.5);
+      const g0=pC-y; a0=clamp(a0-.004*g0*l,.2,3); c0=clamp(c0-.004*g0,-1.5,1.5);
+    }
+    if(k>=cut){ bm[k-cut]=sm; bc[k-cut]=sc; br[k-cut]=sr; }
+  }
+  let SM=0,SC=0,SR=0;
+  for(let i=0;i<m;i++){SM+=bm[i];SC+=bc[i];SR+=br[i];}
+  return {w:Array.from(w),bm,bc,
+    skill:SC>0?(1-SM/SC)*100:0, calGain:SR>0?(1-SC/SR)*100:0,
+    acc:cnt?acc/cnt:0, n:cnt, wins:m};
+}
+
+/* bootstrap por ventanas: preserva la correlación intra-ventana entre snapshots */
+function boot(bm,bc,B,seed){
+  const n=bm.length, out=new Float64Array(B);
+  let s=(seed>>>0)||1;
+  const rnd=()=>{s^=s<<13;s>>>=0;s^=s>>>17;s^=s<<5;s>>>=0;return s/4294967296;};
+  for(let r=0;r<B;r++){
+    let SM=0,SC=0;
+    for(let i=0;i<n;i++){const j=(rnd()*n)|0; SM+=bm[j]; SC+=bc[j];}
+    out[r]=SC>0?(1-SM/SC)*100:0;
+  }
+  return out;
+}
+
+onmessage=e=>{
+  const {id,job,p}=e.data;
+  if(job==='data'){ D=p; postMessage({id,ok:1}); return; }
+  if(!D){ postMessage({id,err:'sin datos'}); return; }
+  const cut=Math.floor(D.Y.length*(1-p.holdout));
+  try{
+    if(job==='sweep'){
+      postMessage({id,res:p.lrs.map(lr=>{const r=train(lr,null,p.l2,cut);
+        return {lr,skill:r.skill,calGain:r.calGain,acc:r.acc,n:r.n,w:r.w};})});
+    } else if(job==='abl'){
+      postMessage({id,res:p.idx.map(i=>{
+        const mask=new Array(NF).fill(true); if(i>=0)mask[i]=false;
+        const r=train(p.lr,i>=0?mask:null,p.l2,cut);
+        return {i,skill:r.skill};})});
+    } else if(job==='ci'){
+      const r=train(p.lr,null,p.l2,cut);
+      postMessage({id,res:{skill:r.skill,calGain:r.calGain,acc:r.acc,n:r.n,
+        wins:r.wins,w:r.w,boot:Array.from(boot(r.bm,r.bc,p.B,p.seed))}});
+    }
+  }catch(err){ postMessage({id,err:String(err)}); }
+};
+`;
+
+const POOL = {ws:[], n:0, seq:0, pend:new Map(), loaded:false, url:null};
+
+function poolCores(){
+  const hw = navigator.hardwareConcurrency || 4;
+  return tog('cfgmax') ? Math.max(1, hw) : Math.max(1, Math.min(4, hw >> 1));
+}
+
+function poolSpin(){
+  poolKill();
+  const n = poolCores();
+  try{
+    POOL.url = URL.createObjectURL(new Blob([WSRC], {type:'text/javascript'}));
+    for(let i=0;i<n;i++){
+      const w = new Worker(POOL.url);
+      w.onmessage = e => {
+        const d = e.data, cb = POOL.pend.get(d.id);
+        if(cb){ POOL.pend.delete(d.id); cb(d); }
+      };
+      w.onerror = () => {};
+      POOL.ws.push(w);
+    }
+    POOL.n = POOL.ws.length; POOL.loaded = false;
+  }catch(e){ POOL.n = 0; }
+  updCompute();
+}
+
+function poolKill(){
+  POOL.ws.forEach(w=>{try{w.terminate();}catch(e){}});
+  POOL.ws = []; POOL.n = 0; POOL.loaded = false; POOL.pend.clear();
+  if(POOL.url){try{URL.revokeObjectURL(POOL.url);}catch(e){}POOL.url=null;}
+}
+
+function poolCall(wk, job, p){
+  return new Promise(res=>{
+    const id = ++POOL.seq;
+    POOL.pend.set(id, res);
+    setTimeout(()=>{ if(POOL.pend.has(id)){POOL.pend.delete(id);res({id,err:'timeout'});} }, 120000);
+    wk.postMessage({id, job, p});
+  });
+}
+
+/* empaqueta el ledger en arrays tipados: 30x más compacto y clonable sin coste */
+function pack(recs){
+  const R = recs.filter(r => r.s && r.s.length === 9);
+  const n = R.length;
+  const Z = new Float32Array(n*81), L = new Float32Array(n*9), C = new Float32Array(n*9);
+  const Y = new Uint8Array(n);
+  for(let k=0;k<n;k++){
+    Y[k] = R[k].y;
+    for(let s=0;s<9;s++){
+      const sn = R[k].s[s];
+      L[k*9+s] = sn.l; C[k*9+s] = sn.c;
+      for(let i=0;i<9;i++) Z[(k*9+s)*9+i] = sn.z[i];
+    }
+  }
+  return {Z,L,C,Y,n,dropped:recs.length-n};
+}
+
+async function poolLoad(recs){
+  if(!POOL.n) return null;
+  const D = pack(recs);
+  if(!D.n) return null;
+  await Promise.all(POOL.ws.map(w=>poolCall(w,'data',{Z:D.Z,L:D.L,C:D.C,Y:D.Y})));
+  POOL.loaded = true;
+  return D;
+}
+
+/* reparte un array de tareas entre todos los workers */
+function shard(arr, k){
+  const out = Array.from({length:k}, ()=>[]);
+  arr.forEach((v,i)=>out[i%k].push(v));
+  return out.filter(a=>a.length);
+}
+
+function updCompute(){
+  const el = document.getElementById('cpustat'); if(!el) return;
+  const hw = navigator.hardwareConcurrency || '?';
+  el.innerHTML = POOL.n
+    ? '<span class="g">'+POOL.n+'</span><span class="d">/'+hw+' núcleos · '+
+      (POOL.loaded?DB.n.toLocaleString()+' ventanas cargadas':'inactivos')+'</span>'
+    : '<span class="a">workers no disponibles</span>';
+}
+
+/* ═══ CEREBRO VISUAL ═══
+   Representación FIEL del modelo, no decorativa. Cada arista es un peso real
+   del vector w. Grosor = |w_i|. Color = signo. Las partículas que viajan son
+   la contribución instantánea w_i·z_i·escala. El nodo dorado es el offset del
+   baseline GBM, que entra directo al logit final sin pasar por la suma micro —
+   exactamente como en L = L0 + escala·(b + w·x).                             */
+
+const BR = {
+  cv:null, ctx:null, W:0, H:0, dpr:1, parts:[], pulses:[], t:0,
+  fps:60, frames:0, fpsT:0, last:0, wtrail:[], glow:0, running:false
+};
+
+const SHORT = ['OBI','MICRO','TFI','CVD','MOM₁₀','MOM₆₀','VWAP','σ-REG','INTEN'];
+
+function brainInit(){
+  BR.cv = document.getElementById('brain'); if(!BR.cv) return;
+  BR.ctx = BR.cv.getContext('2d', {alpha:true});
+  brainSize();
+  window.addEventListener('resize', brainSize);
+  BR.running = true;
+  requestAnimationFrame(brainLoop);
+}
+
+function brainSize(){
+  if(!BR.cv) return;
+  const q = document.getElementById('cfgq') ? document.getElementById('cfgq').value : 'auto';
+  const hw = navigator.hardwareConcurrency || 4;
+  let dpr = window.devicePixelRatio || 1;
+  if(q === 'bajo') dpr = 1;
+  else if(q === 'auto') dpr = Math.min(dpr, hw >= 8 ? 2.5 : 1.6);
+  else if(q === 'alto') dpr = Math.min(dpr, 2.5);
+  else if(q === 'max') dpr = Math.min(dpr, 3);
+  BR.dpr = dpr;
+  const r = BR.cv.getBoundingClientRect();
+  BR.W = Math.max(r.width, 260); BR.H = Math.max(r.height, 300);
+  BR.cv.width = BR.W * dpr; BR.cv.height = BR.H * dpr;
+  BR.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function brainGeom(){
+  const W = BR.W, H = BR.H;
+  const padT = 44, padB = 26;
+  const inX = W * 0.17, sumX = W * 0.60, outX = W * 0.855;
+  const nodes = [];
+  for(let i=0;i<NF;i++){
+    nodes.push({x:inX, y:padT + (H - padT - padB) * (i + .5) / NF});
+  }
+  return {
+    inp: nodes,
+    base: {x:inX, y:padT - 26},
+    sum: {x:sumX, y:H * 0.55},
+    out: {x:outX, y:H * 0.5}
+  };
+}
+
+function qualityBudget(){
+  const q = document.getElementById('cfgq') ? document.getElementById('cfgq').value : 'auto';
+  const hw = navigator.hardwareConcurrency || 4;
+  if(q === 'bajo') return 0;
+  if(q === 'medio') return 90;
+  if(q === 'alto') return 260;
+  if(q === 'max') return 520;
+  return hw >= 8 ? 300 : hw >= 4 ? 150 : 60;
+}
+
+function brainLoop(ts){
+  if(!BR.running) return;
+  requestAnimationFrame(brainLoop);
+  if(document.hidden) return;
+  const dt = Math.min((ts - BR.last) / 16.67, 3) || 1;
+  BR.last = ts; BR.t += dt;
+  BR.frames++;
+  if(ts - BR.fpsT > 700){ BR.fps = BR.frames / ((ts - BR.fpsT) / 1000); BR.frames = 0; BR.fpsT = ts;
+    const f = document.getElementById('fps'); if(f) f.textContent = Math.round(BR.fps) + ' fps'; }
+  brainDraw(dt);
+}
+
+function brainDraw(dt){
+  const c = BR.ctx, W = BR.W, H = BR.H, g = brainGeom();
+  const pr = S.live;
+  c.clearRect(0, 0, W, H);
+
+  const bg = c.createRadialGradient(g.out.x, g.out.y, 8, g.out.x, g.out.y, W * .7);
+  bg.addColorStop(0, 'rgba(0,212,255,.055)'); bg.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = bg; c.fillRect(0, 0, W, H);
+
+  const p = pr ? pr.p : .5;
+  const outCol = p > .58 ? [0,255,136] : p < .42 ? [255,71,87] : [0,212,255];
+  const mxW = Math.max(...M.w.map(Math.abs), .12);
+  const budget = qualityBudget();
+
+  /* ── aristas micro ── */
+  for(let i=0;i<NF;i++){
+    const n = g.inp[i], w = M.w[i], contrib = pr ? pr.contrib[i] : 0;
+    const mag = Math.abs(w) / mxW;
+    const pos = w >= 0;
+    const cx1 = n.x + (g.sum.x - n.x) * .55, cx2 = g.sum.x - (g.sum.x - n.x) * .28;
+    c.beginPath(); c.moveTo(n.x + 7, n.y);
+    c.bezierCurveTo(cx1, n.y, cx2, g.sum.y, g.sum.x - 15, g.sum.y);
+    c.lineWidth = .35 + mag * 2.6;
+    c.strokeStyle = pos ? 'rgba(0,255,136,' + (.07 + mag * .30) + ')'
+                        : 'rgba(255,71,87,' + (.07 + mag * .30) + ')';
+    c.stroke();
+
+    if(budget && pr){
+      const rate = Math.min(Math.abs(contrib) * 2.6, .9) * (budget / 300);
+      if(Math.random() < rate * dt && BR.parts.length < budget)
+        BR.parts.push({i, t:0, v:.010 + Math.random() * .016 + Math.abs(contrib) * .03, s:contrib >= 0});
+    }
+  }
+
+  /* ── partículas ── */
+  for(let k = BR.parts.length - 1; k >= 0; k--){
+    const q = BR.parts[k]; q.t += q.v * dt;
+    if(q.t >= 1){ BR.parts.splice(k, 1); BR.glow = Math.min(BR.glow + .1, 1); continue; }
+    const n = g.inp[q.i], t = q.t, u = 1 - t;
+    const cx1 = n.x + (g.sum.x - n.x) * .55, cx2 = g.sum.x - (g.sum.x - n.x) * .28;
+    const x = u*u*u*(n.x+7) + 3*u*u*t*cx1 + 3*u*t*t*cx2 + t*t*t*(g.sum.x-15);
+    const y = u*u*u*n.y + 3*u*u*t*n.y + 3*u*t*t*g.sum.y + t*t*t*g.sum.y;
+    const a = Math.sin(t * Math.PI) * .95;
+    const col = q.s ? '0,255,136' : '255,71,87';
+    c.fillStyle = 'rgba(' + col + ',' + a + ')';
+    c.beginPath(); c.arc(x, y, 1.6, 0, 6.284); c.fill();
+    if(budget > 120){ c.fillStyle = 'rgba(' + col + ',' + (a * .16) + ')';
+      c.beginPath(); c.arc(x, y, 4.6, 0, 6.284); c.fill(); }
+  }
+
+  /* ── arista dorada del baseline: va directo al logit final ── */
+  const L0 = pr ? pr.L0 : 0, bMag = Math.min(Math.abs(L0) / 3, 1);
+  c.beginPath(); c.moveTo(g.base.x + 7, g.base.y);
+  c.bezierCurveTo(W * .45, g.base.y, W * .62, g.base.y + 6, g.out.x, g.out.y - 15);
+  c.lineWidth = 1.1 + bMag * 2.4;
+  c.strokeStyle = 'rgba(212,175,55,' + (.16 + bMag * .42) + ')';
+  c.stroke();
+  if(budget && pr && Math.random() < .30 * dt && BR.parts.length < budget + 40){
+    BR.pulses.push({t:0, v:.016 + bMag * .020});
+  }
+  for(let k = BR.pulses.length - 1; k >= 0; k--){
+    const q = BR.pulses[k]; q.t += q.v * dt;
+    if(q.t >= 1){ BR.pulses.splice(k, 1); continue; }
+    const t = q.t, u = 1 - t;
+    const x = u*u*u*(g.base.x+7) + 3*u*u*t*(W*.45) + 3*u*t*t*(W*.62) + t*t*t*g.out.x;
+    const y = u*u*u*g.base.y + 3*u*u*t*g.base.y + 3*u*t*t*(g.base.y+6) + t*t*t*(g.out.y-15);
+    c.fillStyle = 'rgba(212,175,55,' + (Math.sin(t * Math.PI) * .9) + ')';
+    c.beginPath(); c.arc(x, y, 1.9, 0, 6.284); c.fill();
+  }
+
+  /* ── nodos de entrada ── */
+  c.textAlign = 'right'; c.font = '500 8.5px "IBM Plex Mono", monospace';
+  for(let i=0;i<NF;i++){
+    const n = g.inp[i], z = pr ? pr.z[i] : 0, act = Math.min(Math.abs(z) / 2.2, 1);
+    const col = Math.abs(z) < .4 ? '122,122,150' : z > 0 ? '0,255,136' : '255,71,87';
+    if(act > .08){
+      const gr = c.createRadialGradient(n.x, n.y, 0, n.x, n.y, 14 + act * 9);
+      gr.addColorStop(0, 'rgba(' + col + ',' + (act * .30) + ')');
+      gr.addColorStop(1, 'rgba(0,0,0,0)');
+      c.fillStyle = gr; c.beginPath(); c.arc(n.x, n.y, 14 + act * 9, 0, 6.284); c.fill();
+    }
+    c.beginPath(); c.arc(n.x, n.y, 3.4 + act * 2.6, 0, 6.284);
+    c.fillStyle = 'rgba(' + col + ',' + (.42 + act * .58) + ')'; c.fill();
+    c.fillStyle = 'rgba(' + col + ',' + (.36 + act * .46) + ')';
+    c.fillText(SHORT[i], n.x - 11, n.y + 3);
+  }
+
+  /* nodo baseline */
+  c.beginPath(); c.arc(g.base.x, g.base.y, 4.4, 0, 6.284);
+  c.fillStyle = 'rgba(212,175,55,.92)'; c.fill();
+  c.fillStyle = 'rgba(212,175,55,.62)';
+  c.fillText('GBM', g.base.x - 11, g.base.y + 3);
+
+  /* ── nodo de suma ── */
+  const micro = pr ? pr.micro : 0, mAbs = Math.min(Math.abs(micro) * 2.4, 1);
+  const sCol = Math.abs(micro) < .04 ? '122,122,150' : micro > 0 ? '0,255,136' : '255,71,87';
+  BR.glow *= .93;
+  const sr = 15 + BR.glow * 4 + mAbs * 4;
+  const sg = c.createRadialGradient(g.sum.x, g.sum.y, 0, g.sum.x, g.sum.y, sr * 2.6);
+  sg.addColorStop(0, 'rgba(' + sCol + ',' + (.16 + BR.glow * .22) + ')');
+  sg.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = sg; c.beginPath(); c.arc(g.sum.x, g.sum.y, sr * 2.6, 0, 6.284); c.fill();
+  c.beginPath(); c.arc(g.sum.x, g.sum.y, sr, 0, 6.284);
+  c.fillStyle = 'rgba(14,14,22,.94)'; c.fill();
+  c.lineWidth = 1.3; c.strokeStyle = 'rgba(' + sCol + ',' + (.5 + mAbs * .5) + ')'; c.stroke();
+  c.textAlign = 'center'; c.font = '700 13px "Orbitron", sans-serif';
+  c.fillStyle = 'rgba(' + sCol + ',.95)'; c.fillText('Σ', g.sum.x, g.sum.y + 5);
+  c.font = '500 8px "IBM Plex Mono", monospace';
+  c.fillStyle = 'rgba(122,122,150,.75)';
+  c.fillText((micro >= 0 ? '+' : '') + micro.toFixed(3), g.sum.x, g.sum.y + sr + 13);
+
+  /* conector suma → salida */
+  c.beginPath(); c.moveTo(g.sum.x + sr, g.sum.y);
+  c.bezierCurveTo(g.sum.x + 34, g.sum.y, g.out.x - 40, g.out.y + 10, g.out.x, g.out.y + 14);
+  c.lineWidth = 1 + mAbs * 2.2;
+  c.strokeStyle = 'rgba(' + sCol + ',' + (.24 + mAbs * .44) + ')'; c.stroke();
+
+  /* ── nodo de salida: anillo sigmoide ── */
+  const R = Math.min(W * .085, 34);
+  c.beginPath(); c.arc(g.out.x, g.out.y, R + 7, 0, 6.284);
+  c.lineWidth = 3.4; c.strokeStyle = 'rgba(255,255,255,.045)'; c.stroke();
+  const a0 = -Math.PI / 2, a1 = a0 + p * 6.2832;
+  c.beginPath(); c.arc(g.out.x, g.out.y, R + 7, a0, a1);
+  c.lineWidth = 3.4; c.lineCap = 'round';
+  c.strokeStyle = 'rgba(' + outCol.join(',') + ',.92)'; c.stroke();
+  const og = c.createRadialGradient(g.out.x, g.out.y, 0, g.out.x, g.out.y, R * 2.4);
+  og.addColorStop(0, 'rgba(' + outCol.join(',') + ',.20)');
+  og.addColorStop(1, 'rgba(0,0,0,0)');
+  c.fillStyle = og; c.beginPath(); c.arc(g.out.x, g.out.y, R * 2.4, 0, 6.284); c.fill();
+  c.beginPath(); c.arc(g.out.x, g.out.y, R, 0, 6.284);
+  c.fillStyle = 'rgba(14,14,22,.97)'; c.fill();
+  c.lineWidth = 1; c.strokeStyle = 'rgba(' + outCol.join(',') + ',.34)'; c.stroke();
+  c.font = '900 ' + Math.round(R * .58) + 'px "Orbitron", sans-serif';
+  c.fillStyle = 'rgba(' + outCol.join(',') + ',1)';
+  c.fillText((p * 100).toFixed(1), g.out.x, g.out.y + R * .16);
+  c.font = '500 7.5px "IBM Plex Mono", monospace';
+  c.fillStyle = 'rgba(122,122,150,.85)';
+  c.fillText('P(UP)', g.out.x, g.out.y + R * .58);
+
+  /* ── cabecera ── */
+  c.textAlign = 'left'; c.font = '500 8.5px "IBM Plex Mono", monospace';
+  c.fillStyle = 'rgba(74,74,98,.95)';
+  c.fillText('9 ENTRADAS · OFFSET GBM · SGD ADAGRAD · ' + M.n.toLocaleString() + ' ACTUALIZACIONES', 12, 17);
+  c.fillStyle = 'rgba(74,74,98,.7)';
+  c.fillText('grosor = |peso| · partícula = contribución en vivo', 12, 30);
+}
+
+/* pulso de aprendizaje al resolver una ventana */
+function brainLearn(y){
+  BR.glow = 1;
+  const g = brainGeom(), budget = qualityBudget();
+  if(!budget) return;
+  for(let i=0;i<NF;i++){
+    const n = Math.min(3 + Math.round(Math.abs(M.w[i]) * 8), 10);
+    for(let k=0;k<n;k++)
+      BR.parts.push({i, t:Math.random() * .18, v:.030 + Math.random() * .022, s:y === 1});
+  }
+  BR.wtrail.push(M.w.slice());
+  if(BR.wtrail.length > 220) BR.wtrail.shift();
+  drawWeights();
+}
+
+/* trayectoria de los pesos: cómo aprende el modelo en el tiempo */
+function drawWeights(){
+  const cv = document.getElementById('wcv'); if(!cv) return;
+  const c = cv.getContext('2d');
+  const W = cv.width = cv.clientWidth * 2, H = cv.height = 210, P = 12;
+  c.clearRect(0, 0, W, H);
+  if(BR.wtrail.length < 2){
+    c.fillStyle = '#4A4A62'; c.font = '500 19px "IBM Plex Mono"'; c.textAlign = 'center';
+    c.fillText('los pesos aparecerán al resolver ventanas', W / 2, H / 2); return;
+  }
+  const mx = Math.max(.25, ...BR.wtrail.flat().map(Math.abs));
+  c.strokeStyle = 'rgba(255,255,255,.06)'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(P, H / 2); c.lineTo(W - P, H / 2); c.stroke();
+  const pal = ['#00D4FF','#00FF88','#FF4757','#D4AF37','#FFB020','#7A7AFF','#FF6FD8','#4FE3C1','#B8B8D0'];
+  for(let i=0;i<NF;i++){
+    c.beginPath(); c.lineWidth = 2; c.strokeStyle = pal[i] + 'CC';
+    BR.wtrail.forEach((w, k) => {
+      const x = P + k / (BR.wtrail.length - 1) * (W - 2 * P);
+      const y = H / 2 - w[i] / mx * (H / 2 - P);
+      k ? c.lineTo(x, y) : c.moveTo(x, y);
+    });
+    c.stroke();
+  }
+  c.fillStyle = '#4A4A62'; c.font = '500 15px "IBM Plex Mono"';
+  c.textAlign = 'left'; c.fillText('±' + mx.toFixed(2), P, 16);
+}
+
+/* ═══ LABORATORIO ═══ */
+const labOut=()=>document.getElementById('labout');
+function labSay(h){labOut().innerHTML=h;}
+
+function renderLab(){
+  const st=document.getElementById('labstat'), eng=document.getElementById('labeng');
+  st.innerHTML='<span class="'+(DB.n?'g':'d')+'">'+DB.n.toLocaleString()+'</span> ventanas · <span class="d">'+
+    (DB.bytes/1048576).toFixed(2)+' MB · tope '+cap().toLocaleString()+'</span>';
+  if(ST.mode==='idb')
+    eng.innerHTML='<span class="dot on"></span><span class="d">IndexedDB activo · ledger completo hasta '+
+      cap().toLocaleString()+' ventanas. Reentrenamiento sin límite.</span>';
+  else if(ST.mode==='memory')
+    eng.innerHTML='<span class="dot off"></span><span class="d">Sin almacenamiento persistente. El motor aprende durante la sesión pero <b class="r">pierde todo al cerrar</b>. Sírvelo desde https o localhost.</span>';
+  else
+    eng.innerHTML='<span class="dot warn"></span><span class="d">Ledger sobre '+ST.label+' — tope '+cap().toLocaleString()+
+      ' ventanas (~'+Math.round(cap()/288)+' días). IndexedDB no disponible'+(DB.err?' ('+DB.err+')':'')+
+      '; sírvelo desde https o localhost para el ledger completo.</span>';
+}
+
+
+async function labPrep(min){
+  const recs=await dbAll(cap());
+  if(recs.length<min){labSay('<div class="empty">Se necesitan ≥'+min+' ventanas limpias. Llevas '+
+    recs.length+' (≈'+Math.ceil((min-recs.length)/12)+'h más).</div>');return null;}
+  if(!POOL.n)poolSpin();
+  if(!POOL.n){labSay('<div class="empty">Web Workers no disponibles en este contexto.</div>');return null;}
+  const D=await poolLoad(recs); if(!D){labSay('<div class="empty">Ledger sin ventanas completas.</div>');return null;}
+  updCompute(); return D;
+}
+
+async function doSweep(){
+  labSay('<div class="empty">Repartiendo entre '+poolCores()+' núcleos…</div>');
+  const D=await labPrep(400); if(!D)return;
+  const t0=performance.now(), lrs=[.005,.01,.02,.04,.06,.09,.13,.18,.25,.35];
+  const parts=shard(lrs,POOL.n);
+  const out=(await Promise.all(parts.map((ls,i)=>
+    poolCall(POOL.ws[i],'sweep',{lrs:ls,l2:2e-4,holdout:.3})))).flatMap(r=>r.res||[]);
+  if(!out.length){labSay('<div class="empty">Los workers no devolvieron resultados.</div>');return;}
+  out.sort((a,b)=>a.lr-b.lr);
+  const best=out.reduce((a,b)=>b.skill>a.skill?b:a), ms=Math.round(performance.now()-t0);
+  const rows=out.map(r=>{const c=r.skill>.5?'g':r.skill>0?'a':'r',bw=Math.min(Math.abs(r.skill),8)/8*50;
+    return '<div class="lg"><div class="lgt">lr '+r.lr.toFixed(3)+'</div><div class="lgbar"><i></i><b style="background:var(--'+
+    (r.skill>0?'green':'red')+');left:'+(r.skill>0?50:50-bw)+'%;width:'+bw+'%"></b></div><div class="lgv '+c+'">'+
+    (r.skill>=0?'+':'')+r.skill.toFixed(2)+'</div></div>';}).join('');
+  labSay('<div class="labh">Barrido de lr · skill fuera de muestra (%)</div>'+rows+
+    '<div class="labn">'+D.n.toLocaleString()+' ventanas · '+lrs.length+' entrenamientos en '+POOL.n+
+    ' núcleos · '+ms+' ms.'+(D.dropped?' '+D.dropped+' descartadas por incompletas.':'')+
+    '<br>Skill medido contra el <b style="color:var(--txt)">baseline recalibrado</b>. La recalibración sola aporta '+
+    best.calGain.toFixed(2)+'% — eso corrige tu σ, no es alpha.</div>'+
+    '<div class="labv">Mejor lr = <b class="y">'+best.lr.toFixed(3)+'</b> con '+
+    (best.skill>=0?'+':'')+best.skill.toFixed(2)+'%. <b>Un punto sin intervalo de confianza no dice nada</b> — corre el bootstrap.</div>');
+}
+
+async function doCI(){
+  labSay('<div class="empty">Bootstrap en '+poolCores()+' núcleos…</div>');
+  const D=await labPrep(400); if(!D)return;
+  const t0=performance.now(), B=Math.round(cfg('cfgboot'))||4000, lr=cfg('cfglr')||.06;
+  const per=Math.ceil(B/POOL.n);
+  const res=await Promise.all(POOL.ws.map((w,i)=>
+    poolCall(w,'ci',{lr,l2:2e-4,holdout:.3,B:per,seed:(i+1)*7919})));
+  const ok=res.filter(r=>r.res); if(!ok.length){labSay('<div class="empty">Sin resultados.</div>');return;}
+  const boots=ok.flatMap(r=>r.res.boot).sort((a,b)=>a-b);
+  const base=ok[0].res, ms=Math.round(performance.now()-t0);
+  const q=p=>boots[Math.min(boots.length-1,Math.max(0,Math.floor(p*boots.length)))];
+  const lo=q(.025), hi=q(.975), med=q(.5);
+  S.lastCI={lo,hi,med,n:base.wins,t:Date.now()}; renderValid();
+  const pNeg=boots.filter(v=>v<=0).length/boots.length;
+  drawBoot(boots,lo,hi);
+  const sig = lo>0 ? '<span class="g">El intervalo del 95% está entero por encima de cero.</span> Hay evidencia de que la microestructura aporta. Sigue en papel y revalida con el doble de ventanas antes de arriesgar nada.'
+    : hi<0 ? '<span class="r">El intervalo está entero por debajo de cero.</span> La capa micro empeora al baseline. Apágala.'
+    : '<span class="a">El intervalo cruza cero — no puedes distinguir tu edge del ruido.</span> Con '+base.wins.toLocaleString()+
+      ' ventanas de holdout esto es indistinguible de azar. <b>Operar aquí es apostar.</b>';
+  labSay('<div class="labh">Bootstrap por ventanas · '+boots.length.toLocaleString()+' remuestreos</div>'+
+    '<canvas id="bootcv" height="150"></canvas>'+
+    '<div class="mtx" style="margin-top:11px">'+
+    '<div class="mt"><div class="lbl">Skill puntual</div><div class="v '+(base.skill>0?'g':'r')+'">'+
+      (base.skill>=0?'+':'')+base.skill.toFixed(2)+'%</div></div>'+
+    '<div class="mt"><div class="lbl">IC 95%</div><div class="v" style="font-size:12px">'+
+      lo.toFixed(2)+' a '+hi.toFixed(2)+'</div></div>'+
+    '<div class="mt"><div class="lbl">P(skill ≤ 0)</div><div class="v '+(pNeg<.05?'g':pNeg>.4?'r':'a')+'">'+
+      (pNeg*100).toFixed(1)+'%</div></div></div>'+
+    '<div class="labn">Remuestreo con reemplazo sobre ventanas completas, preservando la correlación entre los 9 snapshots de cada una. '+
+    base.wins.toLocaleString()+' ventanas de holdout · '+POOL.n+' núcleos · '+ms+' ms.</div>'+
+    '<div class="labv">'+sig+'</div>');
+  setTimeout(()=>drawBoot(boots,lo,hi),30);
+}
+
+function drawBoot(b,lo,hi){
+  const cv=document.getElementById('bootcv'); if(!cv)return;
+  const c=cv.getContext('2d'), W=cv.width=cv.clientWidth*2, H=cv.height=300, P=26;
+  c.clearRect(0,0,W,H);
+  const mn=Math.min(...b), mx=Math.max(...b), rg=(mx-mn)||1, NB=46;
+  const hist=new Array(NB).fill(0);
+  b.forEach(v=>hist[Math.min(NB-1,Math.floor((v-mn)/rg*NB))]++);
+  const hmx=Math.max(...hist);
+  const X=v=>P+(v-mn)/rg*(W-2*P);
+  for(let i=0;i<NB;i++){
+    const x=P+i/NB*(W-2*P), w=(W-2*P)/NB-1.5, h=hist[i]/hmx*(H-2*P);
+    const v=mn+(i+.5)/NB*rg;
+    c.fillStyle=v>0?'rgba(0,255,136,.42)':'rgba(255,71,87,.42)';
+    c.fillRect(x,H-P-h,w,h);
+  }
+  if(mn<0&&mx>0){c.strokeStyle='rgba(232,232,240,.6)';c.lineWidth=2;c.setLineDash([6,5]);
+    c.beginPath();c.moveTo(X(0),P*.4);c.lineTo(X(0),H-P);c.stroke();c.setLineDash([]);
+    c.fillStyle='rgba(232,232,240,.65)';c.font='500 16px "IBM Plex Mono"';c.textAlign='center';
+    c.fillText('cero',X(0),P*.3);}
+  c.strokeStyle='rgba(0,212,255,.85)';c.lineWidth=3;
+  c.beginPath();c.moveTo(X(lo),H-P+9);c.lineTo(X(hi),H-P+9);c.stroke();
+  [lo,hi].forEach(v=>{c.beginPath();c.moveTo(X(v),H-P+3);c.lineTo(X(v),H-P+15);c.stroke();});
+  c.fillStyle='#4A4A62';c.font='500 15px "IBM Plex Mono"';
+  c.textAlign='left';c.fillText(mn.toFixed(1)+'%',P,H-4);
+  c.textAlign='right';c.fillText(mx.toFixed(1)+'%',W-P,H-4);
+}
+
+async function doAblation(){
+  labSay('<div class="empty">Ablación en '+poolCores()+' núcleos…</div>');
+  const D=await labPrep(400); if(!D)return;
+  const t0=performance.now(), lr=cfg('cfglr')||.06;
+  const jobs=[-1,...Array.from({length:NF},(_,i)=>i)];
+  const out=(await Promise.all(shard(jobs,POOL.n).map((idx,i)=>
+    poolCall(POOL.ws[i],'abl',{idx,lr,l2:2e-4,holdout:.3})))).flatMap(r=>r.res||[]);
+  const full=out.find(r=>r.i===-1); if(!full){labSay('<div class="empty">Sin resultados.</div>');return;}
+  const rows=out.filter(r=>r.i>=0).map(r=>({n:FEATS[r.i][1],d:full.skill-r.skill})).sort((a,b)=>b.d-a.d);
+  const mx=Math.max(...rows.map(r=>Math.abs(r.d)),.4);
+  labSay('<div class="labh">Ablación · caída de skill al quitar cada feature (pp)</div>'+
+    rows.map(r=>{const w=Math.abs(r.d)/mx*50,c=r.d>0?'var(--green)':'var(--red)';
+      return '<div class="lg"><div class="lgt">'+r.n+'</div><div class="lgbar"><i></i><b style="background:'+c+
+      ';left:'+(r.d>0?50:50-w)+'%;width:'+w+'%"></b></div><div class="lgv" style="color:'+c+'">'+
+      (r.d>0?'+':'')+r.d.toFixed(2)+'</div></div>';}).join('')+
+    '<div class="labn">Positivo = quitarla empeora, aporta. Negativo = ruido que estorba. Modelo completo: '+
+    full.skill.toFixed(2)+'% · '+(NF+1)+' entrenamientos en '+POOL.n+' núcleos · '+
+    Math.round(performance.now()-t0)+' ms.<br><b style="color:var(--txt)">Con muestra corta espera que casi todas salgan en ruido.</b></div>');
+}
+
+async function doExport(){
+  const recs=await dbAll(cfg('cfgkeep')||8000);
+  if(!recs.length){labSay('<div class="empty">Ledger vacío.</div>');return;}
+  const meta={engine:'ICC BTC 5M',exported:new Date().toISOString(),
+    features:FEATS.map(f=>f[0]),windows:recs.length,
+    schema:'k=inicio ventana ms | y=1 si cierre>=apertura | o=apertura | s[]={t:seg restantes, l:logit baseline GBM, c:escala √(τ/300), z[9]=features estandarizados}'};
+  const blob=new Blob([JSON.stringify(meta)+'\n'+recs.map(r=>JSON.stringify(r)).join('\n')],
+    {type:'application/x-ndjson'});
+  try{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='icc_btc5m_ledger_'+new Date().toISOString().slice(0,10)+'.jsonl';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),3000);
+    labSay('<div class="labv"><span class="g">Exportadas '+recs.length.toLocaleString()+
+      ' ventanas</span> en JSONL. Primera línea = esquema. Cárgalo en pandas para backtest serio fuera del navegador.</div>');
+  }catch(e){
+    labSay('<div class="labv"><span class="a">La descarga está bloqueada en este contexto.</span> Abre el HTML descargado desde localhost para exportar.</div>');
+  }
+}
+
+/* ═══ ARRANQUE ═══ */
+document.querySelectorAll('.tog').forEach(t=>t.addEventListener('click',()=>{t.classList.toggle('on');saveCfg();}));
+document.querySelectorAll('input,select').forEach(i=>i.addEventListener('change',()=>{
+  saveCfg(); if(i.id==='cfgsrc')connect();}));
+document.getElementById('btnsweep').addEventListener('click',doSweep);
+document.getElementById('btnci').addEventListener('click',doCI);
+document.getElementById('btnops').addEventListener('click',exportOps);
+const _cb=document.getElementById('cfgbnb'); if(_cb)_cb.addEventListener('click',()=>setTimeout(bnbPoll,80));
+['bnbmkt','bnbrelay'].forEach(id=>{const e=document.getElementById(id); if(e)e.addEventListener('change',()=>setTimeout(bnbPoll,80));});
+document.getElementById('cfgpoly').addEventListener('click',()=>{POLY.wid=null;POLY.err=null;setTimeout(polyTick,80);});
+document.getElementById('cfgq').addEventListener('change',()=>{brainSize();saveCfg();});
+document.getElementById('cfgmax').addEventListener('click',()=>{setTimeout(poolSpin,60);});
+document.getElementById('btnabl').addEventListener('click',doAblation);
+document.getElementById('btnexp').addEventListener('click',doExport);
+document.getElementById('btnwipe').addEventListener('click',async()=>{
+  if(!confirm('Borrar el ledger crudo. Los pesos y métricas del motor se conservan. ¿Continuar?'))return;
+  await dbWipe(); renderLab(); labSay('<div class="empty">Ledger vaciado.</div>');
+});
+['btnaccprobar','btnaccwipe'].forEach(id=>{const b=document.getElementById(id);
+  if(b)b.addEventListener('click',id==='btnaccprobar'?accProbar:accWipe);});
+['accaddr','acckey','accsec','accpass'].forEach(id=>{const e=document.getElementById(id);
+  if(e)e.addEventListener('change',accSave);});
+{const e=document.getElementById('cfgbank');
+ if(e)e.addEventListener('change',()=>{
+   const v=cfg('cfgbank');
+   if(M.trades){ alert('El banco solo se puede cambiar antes de la primera operación. Pulsa Reiniciar.'); return; }
+   if(v>0){ S.bank=v; renderMetrics(); saveCfg(); save(); }
+ });}
+document.getElementById('btnreset').addEventListener('click',async()=>{
+  if(!confirm('Borrar pesos, historial y PnL. ¿Continuar?'))return;
+  Object.assign(M,{w:new Array(NF).fill(0),b:0,g:new Array(NF).fill(1e-4),gb:1e-4,
+    mu:new Array(NF).fill(0),s2:new Array(NF).fill(1),cnt:0,n:0,a:1,c:0,
+    sMB:0,sBB:0,sLL:0,sAcc:0,sN:0,bins:Array.from({length:10},()=>({n:0,p:0,y:0})),
+    trades:0,wins:0,pnlSum:0,staked:0});
+  S.hist=[];S.pnl=[];S.log=[];S.sparks={};S.lastCI=null;
+  const b0=cfg('cfgbank'); S.bank = b0>0 ? b0 : 1000;   // respeta el banco inicial configurado
+  renderLog();renderShadow();renderValid();renderMetrics();
+  S.skipped=0; for(const k of ['icc:btc5m:model','icc:btc5m:hist'])await stDel(k);
+});
+
+(async()=>{
+  await stInit();
+  await load();
+  await accLoad();
+  await lgLoad();
+  await dbStat();
+  renderLab(); updRun(); wake(); brainInit(); poolSpin(); drawWeights(); renderLog(); renderPoly();
+  await seedVol();
+  connect();
+  setInterval(loop,500);
+  setInterval(polyTick,6000); polyTick();
+  setInterval(bnbPoll,4000); bnbPoll();
+  loop();
+})();
+
+
+</script>
+</body>
+</html>
