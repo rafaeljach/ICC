@@ -134,6 +134,35 @@ http.createServer((req,res) => {
     try{ extra='\n<script>\n'+fs.readFileSync(SYNCF,'utf8')+'\n</script>\n'; }catch(e){}
     return res.end(fs.readFileSync(HTML,'utf8') + extra);
   }
+  if (u.pathname === '/config') {        // el dashboard escribe la configuracion
+    let cambios = 0;
+    for (const [k,v] of u.searchParams) {
+      if (k in CFG) { CFG[k] = String(v); cambios++; }
+      else if (k in TOG) { TOG[k] = (v==='1'||v==='true'); cambios++;
+        const el = ELS.get(k); if (el) el.classList.toggle('on', TOG[k]); }
+    }
+    if (cambios) { try{ fs.writeFileSync(CFGF, JSON.stringify({cfg:CFG,tog:TOG},null,2)); }catch(e){}
+      console.log('[config]', cambios, 'cambios desde el dashboard'); }
+    res.setHeader('Content-Type','application/json');
+    return res.end(JSON.stringify({ok:true, cambios, cfg:CFG, tog:TOG}));
+  }
+  if (u.pathname === '/reset') {         // reinicio del motor del servidor
+    const S=X.S, M=X.M, NF=M.w.length;
+    Object.assign(M,{ w:new Array(NF).fill(0), b:0, g:new Array(NF).fill(1e-4), gb:1e-4,
+      mu:new Array(NF).fill(0), s2:new Array(NF).fill(1), cnt:0, n:0, a:1, c:0, a0:1, c0:0,
+      sMB:0,sBB:0,sCB:0,sLL:0,sAcc:0,sN:0,
+      bins:Array.from({length:10},()=>({n:0,p:0,y:0})),
+      trades:0,wins:0,pnlSum:0,staked:0,
+      shN:0,shWins:0,shPnl:0,sh0Pnl:0,sh0Wins:0,shEdge:0,shSeen:0,sh0N:0,
+      gN:0,gMB:0,gCB:0,gAcc:0,gReal:0,uN:0,uMB:0,uCB:0,uAcc:0,uReal:0 });
+    S.hist=[]; S.pnl=[]; S.log=[]; S.gateLog=[]; S.skipped=0;
+    const b0 = parseFloat(CFG.cfgbank)||1000; S.bank=b0;
+    for (const k of Object.keys(STORE)) delete STORE[k];
+    persistir();
+    console.log('[reset] motor reiniciado, banco', b0);
+    res.setHeader('Content-Type','application/json');
+    return res.end(JSON.stringify({ok:true, banco:b0}));
+  }
   if (u.pathname === '/precio') {          // fijar el precio de mercado a mano
     const v = u.searchParams.get('up');
     if (v) { CFG.cfgmkt = String(v);
@@ -149,7 +178,8 @@ http.createServer((req,res) => {
           pnl:(S.pnl||[]).slice(-400), bank:S.bank, skipped:S.skipped||0,
           conn:S.conn, spot:S.spot, sigSec:S.sigSec, kSig:S.kSig,
           gateLog:(S.gateLog||[]).slice(-300), frozenWin:S.frozenWin||0,
-          conStat:S.conStat||null, polyBlocked:S.polyBlocked||0 } }));
+          conStat:S.conStat||null, polyBlocked:S.polyBlocked||0 },
+      CFG, TOG }));
   }
   if (u.pathname === '/export') {          // ledger crudo para el bootstrap
     res.setHeader('Content-Type','application/json');
@@ -203,23 +233,78 @@ http.createServer((req,res) => {
 process.on('uncaughtException', e => console.error('[error]', e.message));
 RUNNEREOF
 node --check motor-headless.js && echo "   OK"
-echo "== 2/6 · sincronizador =="
+echo "== 2/6 · mando bidireccional =="
 cat > sync.js <<'SYNCEOF'
-/* ═══ SINCRONIZACIÓN CON EL MOTOR DEL DROPLET ═══
-   El dashboard de arriba NO se modifica: este bloque se concatena después.
-   El servidor es la fuente de verdad —él recoge 24/7 y entrena—; el navegador
-   queda como visor y calcula la predicción en vivo con el mismo feed. */
+/* ═══ MANDO A DISTANCIA DEL MOTOR DEL DROPLET ═══
+   El dashboard de arriba NO se modifica: este bloque va concatenado después.
+   El motor real corre en el servidor 24/7. El navegador:
+     · LEE  el estado completo cada 4 s  (/full)
+     · ESCRIBE cada cambio de configuracion  (/config)
+     · manda el reinicio                     (/reset)
+   Su motor local queda apagado para que no haya dos con datos distintos.  */
 (function(){
-  var fallos = 0;
+  var fallos = 0, primera = true, escribiendo = false;
+
   function marca(txt, cls){
     var el = document.getElementById('runmode'); if(!el) return;
     el.innerHTML = '<span class="dot ' + cls + '"></span><span class="d">' + txt + '</span>';
   }
+
+  /* ── apagar el motor local: el del droplet manda ── */
+  try{
+    window.save   = function(){};
+    window.stSet  = async function(){};
+    window.dbPut  = async function(){};
+    window.resolve = function(){};                 // no entrena en el navegador
+    if (typeof S === 'object' && S.ws){ try{ S.ws.onclose=null; S.ws.close(); }catch(e){} }
+    window.connect = function(){};
+  }catch(e){}
+
+  /* ── ESCRITURA: cualquier campo o toggle va al servidor ── */
+  var IDS_CFG = ['cfgsrc','cfgmkt','cfgfee','cfgedge','cfgkelly','cfgmin','cfglr','cfgkeep',
+                 'cfgq','cfgboot','cfgmaxpx','cfgminpx','cfgbank','cfgshrink','cfgdec',
+                 'bnbmkt','bnbrelay','cfgbnbfee'];
+  var IDS_TOG = ['cfgmicro','cfglearn','cfgmax','cfgpoly','cfgpolygate','cfgfrozen','cfgbnb'];
+
+  async function empujar(k, v){
+    escribiendo = true;
+    try{
+      await fetch('/config?' + encodeURIComponent(k) + '=' + encodeURIComponent(v), {cache:'no-store'});
+      marca('<b class="c">Enviado al motor:</b> ' + k + ' = ' + v, 'on');
+    }catch(e){ marca('<b class="r">No pude escribir en el motor</b>', 'off'); }
+    setTimeout(function(){ escribiendo = false; }, 1200);
+  }
+
+  function cablear(){
+    IDS_CFG.forEach(function(id){
+      var el = document.getElementById(id); if(!el || el.__icc) return; el.__icc = 1;
+      el.addEventListener('change', function(){ empujar(id, el.value); });
+    });
+    IDS_TOG.forEach(function(id){
+      var el = document.getElementById(id); if(!el || el.__icc) return; el.__icc = 1;
+      el.addEventListener('click', function(){
+        setTimeout(function(){ empujar(id, el.classList.contains('on') ? '1' : '0'); }, 60);
+      });
+    });
+    var rb = document.getElementById('btnreset');
+    if (rb && !rb.__icc){ rb.__icc = 1;
+      rb.addEventListener('click', function(){
+        setTimeout(async function(){
+          try{ await fetch('/reset',{cache:'no-store'});
+               marca('<b class="a">Motor del droplet reiniciado</b>','on');
+          }catch(e){}
+        }, 300);
+      });
+    }
+  }
+
+  /* ── LECTURA: estado completo del servidor ── */
   async function sincronizar(){
     try{
       var r = await fetch('/full', {cache:'no-store'});
       if(!r.ok) throw new Error('HTTP ' + r.status);
       var j = await r.json();
+
       if(j.M) Object.assign(M, j.M);
       if(j.S){
         S.hist = j.S.hist || []; S.log = j.S.log || []; S.pnl = j.S.pnl || [];
@@ -227,40 +312,49 @@ cat > sync.js <<'SYNCEOF'
         S.gateLog = j.S.gateLog || []; S.frozenWin = j.S.frozenWin || 0;
         S.conStat = j.S.conStat || null; S.polyBlocked = j.S.polyBlocked || 0;
       }
+      /* reflejar la config del servidor en los campos, salvo si acabas de tocar uno */
+      if(j.CFG && !escribiendo){
+        for(var k in j.CFG){ var e1 = document.getElementById(k);
+          if(e1 && document.activeElement !== e1 && e1.value !== j.CFG[k]) e1.value = j.CFG[k]; }
+      }
+      if(j.TOG && !escribiendo){
+        for(var t in j.TOG){ var e2 = document.getElementById(t);
+          if(e2 && e2.classList) e2.classList.toggle('on', !!j.TOG[t]); }
+      }
+
+      cablear();
       fallos = 0;
-      var n = (M.gN||0) + (M.uN||0);
-      marca('<b class="g">Sincronizado con el motor del droplet</b> \u2014 ' +
-            n.toLocaleString() + ' ventanas \u00b7 ' + (M.trades||0) +
-            ' operaciones \u00b7 estas metricas son las del servidor', 'on');
+      if(!escribiendo){
+        var n = (M.gN||0) + (M.uN||0);
+        marca('<b class="g">Conectado al motor del droplet</b> \u2014 ' + n.toLocaleString() +
+              ' ventanas \u00b7 ' + (M.trades||0) + ' operaciones \u00b7 ' +
+              'sigue trabajando aunque cierres esta pagina', 'on');
+      }
       try{
         if(typeof renderMetrics === 'function') renderMetrics();
         if(typeof renderLog     === 'function') renderLog();
         if(typeof renderPop     === 'function') renderPop();
         if(typeof renderGate    === 'function') renderGate();
         if(typeof renderConn    === 'function') renderConn();
+        if(typeof renderValid   === 'function') renderValid();
+        if(typeof renderShadow  === 'function') renderShadow();
         if(typeof drawCal       === 'function') drawCal();
         if(typeof drawPnl       === 'function') drawPnl();
+        if(typeof drawWeights   === 'function') drawWeights();
       }catch(e){}
+      primera = false;
     }catch(e){
-      if(++fallos > 2) marca('<b class="r">Sin conexion con el motor del droplet</b> \u2014 ' +
-        'los numeros que ves son locales', 'off');
+      if(++fallos > 2) marca('<b class="r">Sin conexion con el motor</b> \u2014 ' +
+        'lo que ves puede estar desactualizado', 'off');
     }
   }
-  /* apagar el motor LOCAL del navegador: el del droplet es el unico que
-     recoge y entrena. Sin esto habria dos motores con datos distintos y al
-     cerrar la pestana se perderia el del navegador. */
-  try{
-    window.save = function(){}; window.stSet = async function(){};
-    if (typeof S === 'object' && S.ws) { try{ S.ws.onclose=null; S.ws.close(); }catch(e){} }
-    if (typeof connect === 'function') window.connect = function(){};
-    if (typeof resolve === 'function') window.resolve = function(){};   // no entrena en local
-    if (typeof dbPut  === 'function') window.dbPut  = async function(){};
-  }catch(e){}
-  sincronizar(); setInterval(sincronizar, 4000);
+
+  sincronizar();
+  setInterval(sincronizar, 4000);
 })();
 SYNCEOF
 node --check sync.js && echo "   OK"
-echo "== 3/6 · visor =="
+echo "== 3/6 · visor movil =="
 cat > visor.html <<'VISOREOF'
 <!DOCTYPE html>
 <html lang="es">
@@ -546,8 +640,8 @@ IP=$(curl -s --max-time 5 ifconfig.me || echo TU-IP)
 curl -s localhost:8080/estado | head -8
 echo
 echo "  ==============================================="
-echo "   DASHBOARD  : http://$IP:8080/     <- abre esto"
-echo "   Visor movil: http://$IP:8080/visor"
-echo "   Estado     : http://$IP:8080/estado"
-echo "   Logs       : journalctl -u icc-motor -f"
+echo "   DASHBOARD : http://$IP:8080/"
+echo "   Visor     : http://$IP:8080/visor"
+echo "   Estado    : http://$IP:8080/estado"
+echo "   Logs      : journalctl -u icc-motor -f"
 echo "  ==============================================="
