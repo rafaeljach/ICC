@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 mkdir -p /opt/motor && cd /opt/motor
-echo "== 1/6 · runner =="
+echo "== 1/6 · runner + Kalshi =="
 cat > motor-headless.js <<'RUNNEREOF'
 #!/usr/bin/env node
 /* ═══ ICC MOTOR HEADLESS ═══
@@ -28,10 +28,10 @@ const CFG_DEF = {
   cfgsrc:'binance', cfgmkt:'0', cfgfee:'1.56', cfgedge:'2', cfgkelly:'0.10',
   cfgmin:'0', cfglr:'0.06', cfgkeep:'8000', cfgq:'bajo', cfgboot:'2000',
   cfgmaxpx:'90', cfgminpx:'5', cfgbank:'50', cfgshrink:'50', cfgdec:'1',
-  bnbmkt:'', bnbrelay:'', cfgbnbfee:'1.8',
+  bnbmkt:'', bnbrelay:'', cfgbnbfee:'1.8', kalserie:'KXBTC15M',
 };
 const TOG_DEF = { cfgmicro:true, cfglearn:true, cfgmax:false,
-                  cfgpoly:false, cfgpolygate:false, cfgfrozen:true, cfgbnb:false };
+                  cfgpoly:false, cfgpolygate:false, cfgfrozen:true, cfgbnb:false, cfgkal:true };
 let CFG = {...CFG_DEF}, TOG = {...TOG_DEF};
 try { const j = JSON.parse(fs.readFileSync(CFGF,'utf8'));
       CFG = {...CFG, ...(j.cfg||{})}; TOG = {...TOG, ...(j.tog||{})}; } catch(e){}
@@ -99,6 +99,90 @@ function CODIGO_EXPORT(){
   (0, eval)(CODIGO + '\n;globalThis.__ICC = {S, M, cfg, tog};\n');
 }
 const X = globalThis.__ICC;
+
+
+/* ═══ LIBRO REAL DE KALSHI ═══
+   Publico, sin autenticacion:  https://external-api.kalshi.com/trade-api/v2
+     GET /markets?series_ticker=KXBTC15M&status=open   -> mercados abiertos
+     GET /markets/{ticker}/orderbook                    -> libro
+   Kalshi devuelve SOLO pujas, no asks: una puja YES a X equivale a un ask NO
+   a 1-X. Se reconstruye el ask de UP desde la mejor puja de NO.            */
+const KAL = { on:false, ticker:null, ask:null, bid:null, mid:null,
+              ts:0, err:null, cierra:0, titulo:null, intentos:0 };
+
+function kalGet(path){
+  return new Promise((res, rej) => {
+    const req = https.get({ host:'external-api.kalshi.com',
+      path:'/trade-api/v2' + path, timeout:8000,
+      headers:{'Accept':'application/json'} },
+      r => { let b=''; r.on('data',d=>b+=d);
+        r.on('end',()=>{ try{ res({code:r.statusCode, j:JSON.parse(b)}); }
+                         catch(e){ rej(new Error(r.statusCode+' '+b.slice(0,90))); } }); });
+    req.on('timeout',()=>{ req.destroy(); rej(new Error('timeout')); });
+    req.on('error',rej);
+  });
+}
+
+/* mercado BTC abierto que cierra antes: el que se esta negociando */
+async function kalMercado(){
+  const serie = CFG.kalserie || 'KXBTC15M';
+  const {j} = await kalGet('/markets?series_ticker='+serie+'&status=open&limit=200');
+  const ms = (j.markets||[]).filter(m => m.close_time)
+    .map(m => ({ ticker:m.ticker, titulo:m.title, cierra:Date.parse(m.close_time) }))
+    .filter(m => m.cierra > Date.now() + 20000)
+    .sort((a,b) => a.cierra - b.cierra);
+  return ms[0] || null;
+}
+
+async function kalLibro(t){
+  const {j} = await kalGet('/markets/'+encodeURIComponent(t)+'/orderbook');
+  const ob = j.orderbook_fp || j.orderbook || {};
+  const yes = ob.yes_dollars || ob.yes || [];
+  const no  = ob.no_dollars  || ob.no  || [];
+  if(!yes.length && !no.length) return null;
+  /* mejor puja YES = bid de UP.  mejor puja NO a X = ask de UP a 1-X */
+  const bid = yes.length ? Math.max(...yes.map(x => +x[0])) : null;
+  const ask = no.length  ? 1 - Math.max(...no.map(x => +x[0])) : null;
+  if(bid == null || ask == null) return null;
+  return { bid, ask, mid:(bid+ask)/2, niveles:yes.length+no.length };
+}
+
+let kalOcupado = false;
+async function kalTick(){
+  if(!TOG.cfgkal || kalOcupado) return;
+  kalOcupado = true;
+  try{
+    KAL.intentos++;
+    if(!KAL.ticker || KAL.cierra < Date.now() + 20000){
+      const m = await kalMercado();
+      if(!m){ KAL.err = 'sin mercado BTC abierto'; KAL.ask = null; return; }
+      KAL.ticker = m.ticker; KAL.cierra = m.cierra; KAL.titulo = m.titulo;
+      log('[kalshi] mercado', m.ticker, '| cierra en',
+          Math.round((m.cierra - Date.now())/1000) + 's');
+    }
+    const L = await kalLibro(KAL.ticker);
+    if(!L){ KAL.err = 'libro vacio'; KAL.ask = null; return; }
+    KAL.ask = L.ask; KAL.bid = L.bid; KAL.mid = L.mid;
+    KAL.niveles = L.niveles; KAL.ts = Date.now(); KAL.err = null;
+    if(KAL.intentos < 4 || KAL.intentos % 60 === 0)
+      log('[kalshi] UP ask', (L.ask*100).toFixed(1)+'c', 'bid', (L.bid*100).toFixed(1)+'c');
+  }catch(e){ KAL.err = String(e.message||e).slice(0,90); KAL.ask = null; }
+  finally{ kalOcupado = false; }
+}
+setInterval(kalTick, 5000);
+/* el motor lee cfgmkt en centimos: se lo escribimos con el ask real de Kalshi */
+setInterval(() => {
+  const p = kalPrecio();
+  if(p != null) CFG.cfgmkt = (p*100).toFixed(1);
+  else if(TOG.cfgkal) CFG.cfgmkt = '0';
+}, 2000);
+
+/* precio vivo para el motor: sustituye al simulado */
+function kalPrecio(){
+  if(!TOG.cfgkal || KAL.ask == null) return null;
+  if(Date.now() - KAL.ts > 30000) return null;
+  return KAL.ask;
+}
 
 /* ── log periódico ── */
 let ultVent = 0;
@@ -181,7 +265,13 @@ http.createServer((req,res) => {
           conStat:S.conStat||null, polyBlocked:S.polyBlocked||0 },
       win: S.win ? { id:S.win.id, start:S.win.start, end:S.win.end,
                      open:S.win.open, dirty:S.win.dirty||null } : null,
-      CFG, TOG }));
+      CFG, TOG,
+      KAL: TOG.cfgkal ? { activo:KAL.ask!=null, ticker:KAL.ticker,
+        ask:KAL.ask!=null?+(KAL.ask*100).toFixed(1):null,
+        bid:KAL.bid!=null?+(KAL.bid*100).toFixed(1):null,
+        spread:(KAL.ask!=null&&KAL.bid!=null)?+((KAL.ask-KAL.bid)*100).toFixed(1):null,
+        cierra_s:KAL.cierra?Math.round((KAL.cierra-Date.now())/1000):null,
+        error:KAL.err } : null }));
   }
   if (u.pathname === '/export') {          // ledger crudo para el bootstrap
     res.setHeader('Content-Type','application/json');
@@ -212,6 +302,12 @@ http.createServer((req,res) => {
       baseline_c: +(M.sh0Pnl/(M.sh0N||1)*100).toFixed(2) } : null,
     pesos: M.w.map(v=>+v.toFixed(4)),
     precioMercadoUP: CFG.cfgmkt,
+    kalshi: TOG.cfgkal ? { activo:KAL.ask!=null, ticker:KAL.ticker, titulo:KAL.titulo,
+      ask:KAL.ask!=null?+(KAL.ask*100).toFixed(1):null,
+      bid:KAL.bid!=null?+(KAL.bid*100).toFixed(1):null,
+      spread:(KAL.ask!=null&&KAL.bid!=null)?+((KAL.ask-KAL.bid)*100).toFixed(1):null,
+      cierra_s:KAL.cierra?Math.round((KAL.cierra-Date.now())/1000):null,
+      niveles:KAL.niveles||0, error:KAL.err } : null,
     ahora: Date.now(),
     prediccion: S.live ? { p:+(S.live.p*100).toFixed(1), base:+(S.live.p0*100).toFixed(1),
       micro:+((S.live.p-S.live.p0)*100).toFixed(2) } : null,
@@ -235,7 +331,7 @@ http.createServer((req,res) => {
 process.on('uncaughtException', e => console.error('[error]', e.message));
 RUNNEREOF
 node --check motor-headless.js && echo "   OK"
-echo "== 2/6 · mando bidireccional =="
+echo "== 2/6 · mando =="
 cat > sync.js <<'SYNCEOF'
 /* ═══ MANDO A DISTANCIA DEL MOTOR DEL DROPLET ═══
    El dashboard de arriba NO se modifica: este bloque va concatenado después.
@@ -315,6 +411,7 @@ cat > sync.js <<'SYNCEOF'
         S.conStat = j.S.conStat || null; S.polyBlocked = j.S.polyBlocked || 0;
       }
       /* reflejar la config del servidor en los campos, salvo si acabas de tocar uno */
+      if(j.KAL===undefined && j.kalshi) j.KAL=j.kalshi;
       if(j.CFG && !escribiendo){
         for(var k in j.CFG){ var e1 = document.getElementById(k);
           if(e1 && document.activeElement !== e1 && e1.value !== j.CFG[k]) e1.value = j.CFG[k]; }
@@ -360,6 +457,17 @@ cat > sync.js <<'SYNCEOF'
         if(en) en.textContent = (M.n||0).toLocaleString();
       }
 
+      /* libro real de Kalshi en la barra superior */
+      if(j.KAL){
+        var K=j.KAL, el=document.getElementById('polystat');
+        if(el){
+          el.innerHTML = K.activo
+            ? '<b class="g">KALSHI ' + K.ticker + '</b> \u00b7 UP ask <b class="c">' +
+              K.ask + '\u00a2</b> bid <b>' + K.bid + '\u00a2</b> \u00b7 spread ' +
+              K.spread + '\u00a2 \u00b7 cierra en ' + K.cierra_s + 's'
+            : '<b class="r">Kalshi sin libro</b> \u00b7 ' + (K.error||'esperando');
+        }
+      }
       cablear();
       fallos = 0;
       if(!escribiendo){
@@ -673,12 +781,14 @@ SVC
 systemctl daemon-reload
 systemctl enable --now icc-motor >/dev/null 2>&1 || systemctl restart icc-motor
 ufw allow 8080/tcp >/dev/null 2>&1 || true
-sleep 20
+sleep 25
 IP=$(curl -s --max-time 5 ifconfig.me || echo TU-IP)
-curl -s localhost:8080/estado | head -8
+echo
+journalctl -u icc-motor -n 15 --no-pager | grep -a kalshi | tail -4
+echo
+curl -s localhost:8080/estado | python3 -c "import json,sys;d=json.load(sys.stdin);print(json.dumps(d.get('kalshi'),indent=2))" 2>/dev/null || curl -s localhost:8080/estado | head -6
 echo
 echo "  ==============================================="
 echo "   DASHBOARD : http://$IP:8080/"
 echo "   Estado    : http://$IP:8080/estado"
-echo "   Logs      : journalctl -u icc-motor -f"
 echo "  ==============================================="
