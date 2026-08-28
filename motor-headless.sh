@@ -179,6 +179,8 @@ http.createServer((req,res) => {
           conn:S.conn, spot:S.spot, sigSec:S.sigSec, kSig:S.kSig,
           gateLog:(S.gateLog||[]).slice(-300), frozenWin:S.frozenWin||0,
           conStat:S.conStat||null, polyBlocked:S.polyBlocked||0 },
+      win: S.win ? { id:S.win.id, start:S.win.start, end:S.win.end,
+                     open:S.win.open, dirty:S.win.dirty||null } : null,
       CFG, TOG }));
   }
   if (u.pathname === '/export') {          // ledger crudo para el bootstrap
@@ -322,6 +324,42 @@ cat > sync.js <<'SYNCEOF'
           if(e2 && e2.classList) e2.classList.toggle('on', !!j.TOG[t]); }
       }
 
+      /* el motor local esta apagado, asi que S.spot no se actualiza solo:
+         lo trae el servidor. Sin esto el navegador marca "feed sin datos"
+         aunque el droplet este recibiendo precio perfectamente. */
+      if(j.S && j.S.spot){
+        S.spot = j.S.spot;
+        S.conn = j.S.conn || 'live';
+        S.lastMsg = Date.now();
+        if(j.S.sigSec) S.sigSec = j.S.sigSec;
+        if(j.S.kSig)   S.kSig   = j.S.kSig;
+        if(j.win){
+          if(!S.win) S.win = {};
+          S.win.id = j.win.id; S.win.start = j.win.start; S.win.end = j.win.end;
+          S.win.open = j.win.open; S.win.dirty = j.win.dirty || null;
+        }
+        var e = document.getElementById('tkspot');
+        if(e){ e.textContent = '$' + j.S.spot.toLocaleString('en-US',{maximumFractionDigits:1});
+               e.className = 'v c'; }
+        if(j.win && j.win.open){
+          var eo = document.getElementById('tkopen');
+          if(eo) eo.textContent = '$' + j.win.open.toLocaleString('en-US',{maximumFractionDigits:1});
+          var dl = (j.S.spot / j.win.open - 1) * 100;
+          var ed = document.getElementById('tkdelta');
+          if(ed){ ed.textContent = (dl>=0?'+':'') + dl.toFixed(3) + '%';
+                  ed.className = 'v ' + (dl>=0?'g':'r'); }
+          var tl = Math.max(Math.round((j.win.end - Date.now())/1000), 0);
+          var et = document.getElementById('tkleft');
+          if(et) et.textContent = Math.floor(tl/60) + ':' + String(tl%60).padStart(2,'0');
+        }
+        if(j.S.sigSec){
+          var es = document.getElementById('tksig');
+          if(es) es.textContent = '\u00b1' + (j.S.sigSec*Math.sqrt(300)*100).toFixed(3) + '%';
+        }
+        var en = document.getElementById('tkn');
+        if(en) en.textContent = (M.n||0).toLocaleString();
+      }
+
       cablear();
       fallos = 0;
       if(!escribiendo){
@@ -354,7 +392,7 @@ cat > sync.js <<'SYNCEOF'
 })();
 SYNCEOF
 node --check sync.js && echo "   OK"
-echo "== 3/6 · visor movil =="
+echo "== 3/6 · visor =="
 cat > visor.html <<'VISOREOF'
 <!DOCTYPE html>
 <html lang="es">
@@ -610,7 +648,7 @@ tick(); setInterval(tick, 4000);
 VISOREOF
 echo "   OK"
 echo "== 4/6 · dashboard =="
-[ -f dashboard.html ] || { echo "   FALTA dashboard.html en /opt/motor"; exit 1; }
+[ -f dashboard.html ] || { echo "   FALTA dashboard.html"; exit 1; }
 echo "   $(wc -c < dashboard.html) bytes (sin modificar)"
 echo "== 5/6 · dependencias =="
 [ -f package.json ] || echo '{"name":"icc-motor","private":true,"dependencies":{"ws":"^8.18.0"}}' > package.json
@@ -641,7 +679,6 @@ curl -s localhost:8080/estado | head -8
 echo
 echo "  ==============================================="
 echo "   DASHBOARD : http://$IP:8080/"
-echo "   Visor     : http://$IP:8080/visor"
 echo "   Estado    : http://$IP:8080/estado"
 echo "   Logs      : journalctl -u icc-motor -f"
 echo "  ==============================================="
